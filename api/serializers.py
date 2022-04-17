@@ -13,7 +13,7 @@ class MortgageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mortgage
-        fields = ['id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date']
+        fields = ['id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date', 'real_estate_object']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -21,4 +21,4 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ['id', 'date', 'amount', 'bank_percent', 'debt_decrease', 'debt_rest']
+        fields = ['id', 'date', 'amount', 'bank_percent', 'debt_decrease', 'debt_rest', 'mortgage']
