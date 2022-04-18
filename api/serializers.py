@@ -9,16 +9,17 @@ class RealEstateObjectSerializer(serializers.ModelSerializer):
 
 
 class MortgageSerializer(serializers.ModelSerializer):
-    real_estate_object = RealEstateObjectSerializer(many=False)
+    real_estate_object_id = serializers.PrimaryKeyRelatedField(many=False, queryset=RealEstateObject.objects.all())
 
     class Meta:
         model = Mortgage
-        fields = ['id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date', 'real_estate_object']
+        fields = ['id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date',
+                  'real_estate_object_id']
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-    mortgage = MortgageSerializer(many=False)
+    mortgage_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Mortgage.objects.all())
 
     class Meta:
         model = Payment
-        fields = ['id', 'date', 'amount', 'bank_percent', 'debt_decrease', 'debt_rest', 'mortgage']
+        fields = ['id', 'date', 'amount', 'bank_share', 'debt_decrease', 'debt_rest', 'mortgage_id']
