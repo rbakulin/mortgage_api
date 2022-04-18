@@ -10,32 +10,33 @@ class CreatedUpdatedModel(models.Model):
 
 
 class Mortgage(CreatedUpdatedModel):
-    percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="Процент")
-    period = models.IntegerField(verbose_name="Срок кредита")
-    first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="ПВ")
-    total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="Сумма кредита")
-    issue_date = models.DateField(null=True, blank=True, verbose_name="Дата выдачи")
+    percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="percent")
+    period = models.IntegerField(verbose_name="period")
+    first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount")
+    total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
+    issue_date = models.DateField(null=True, blank=True, verbose_name="issue date")
     real_estate_object = models.ForeignKey('RealEstateObject', unique=True, on_delete=models.CASCADE, null=True,
-                                           verbose_name='Объект недвижимости')
+                                           related_name="mortgage", verbose_name="real estate object")
 
     class Meta:
         db_table = 'mortgage'
 
 
 class RealEstateObject(CreatedUpdatedModel):
-    price = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="Цена")
-    area = models.DecimalField(max_digits=5, decimal_places=1, verbose_name="Площадь")
-    address = models.CharField(max_length=200, verbose_name="Адрес")
-    built_year = models.IntegerField(verbose_name='Год постройки')
+    price = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="price")
+    area = models.DecimalField(max_digits=5, decimal_places=1, verbose_name="area")
+    address = models.CharField(max_length=200, verbose_name="address")
+    built_year = models.IntegerField(verbose_name='build year')
 
     class Meta:
         db_table = 'real_estate_object'
 
 
 class Payment(CreatedUpdatedModel):
-    date = models.DateField(null=True, blank=True, verbose_name="Дата")
-    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="Сумма")
-    mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, null=True, verbose_name='Ипотечный кредит')
+    date = models.DateField(null=True, blank=True, verbose_name="date")
+    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")
+    mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, null=True, related_name="payments",
+                                 verbose_name='mortgage')
 
     def get_prev_payment(self):
         past_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__lt=self.date)
