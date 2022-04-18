@@ -45,7 +45,7 @@ class Payment(CreatedUpdatedModel):
             return None
 
     @property
-    def bank_percent(self):
+    def bank_share(self):
         prev_payment = self.get_prev_payment()
         if prev_payment:
             days_from_prev_payment = self.date - prev_payment.date
@@ -58,7 +58,7 @@ class Payment(CreatedUpdatedModel):
 
     @property
     def debt_decrease(self):
-        return self.amount - self.bank_percent
+        return self.amount - self.bank_share
 
     @property
     def debt_rest(self):

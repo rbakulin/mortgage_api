@@ -3,8 +3,8 @@ from .models import Mortgage, RealEstateObject, Payment
 
 
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ['date', 'amount', 'mortgage', 'bank_percent', 'debt_decrease', 'debt_rest']
-    readonly_fields = ('bank_percent', 'debt_decrease', 'debt_rest')
+    list_display = ['date', 'amount', 'mortgage', 'bank_share', 'debt_decrease', 'debt_rest']
+    readonly_fields = ('bank_share', 'debt_decrease', 'debt_rest')
     ordering = ['date']
 
 
