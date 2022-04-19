@@ -17,9 +17,11 @@ class Mortgage(CreatedUpdatedModel):
     issue_date = models.DateField(null=True, blank=True, verbose_name="issue date")
     real_estate_object = models.ForeignKey('RealEstateObject', unique=True, on_delete=models.CASCADE, null=True,
                                            related_name="mortgage", verbose_name="real estate object")
+    user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
     class Meta:
         db_table = 'mortgage'
+        ordering = ['id']
 
 
 class RealEstateObject(CreatedUpdatedModel):
