@@ -8,7 +8,7 @@ from .pagination import CustomPagination
 class ListCreateMortgageAPIView(ListCreateAPIView):
     serializer_class = MortgageSerializer
     queryset = Mortgage.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
     # def perform_create(self, serializer):
@@ -18,30 +18,30 @@ class ListCreateMortgageAPIView(ListCreateAPIView):
 class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = MortgageSerializer
     queryset = Mortgage.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
 class ListCreateRealEstateObjectAPIView(ListCreateMortgageAPIView):
     serializer_class = RealEstateObjectSerializer
     queryset = RealEstateObject.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
 
 class RetrieveUpdateDestroyRealEstateObjectAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = RealEstateObjectSerializer
     queryset = RealEstateObject.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
 
 class ListCreatePaymentAPIView(ListCreateMortgageAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
 
 class RetrieveUpdateDestroyPaymentAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
