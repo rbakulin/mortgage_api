@@ -5,7 +5,7 @@ from mortgage.models import Mortgage, RealEstateObject, Payment
 class RealEstateObjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = RealEstateObject
-        fields = ['id', 'price', 'area', 'address', 'built_year']
+        fields = ('id', 'price', 'area', 'address', 'built_year')
 
 
 class MortgageSerializer(serializers.ModelSerializer):
@@ -14,8 +14,8 @@ class MortgageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mortgage
-        fields = ['id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date',
-                  'real_estate_object_id', 'user_id']
+        fields = ('id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date',
+                  'real_estate_object_id', 'user_id')
 
 
 class PaymentSerializer(serializers.ModelSerializer):
@@ -23,4 +23,4 @@ class PaymentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Payment
-        fields = ['id', 'date', 'amount', 'bank_share', 'debt_decrease', 'debt_rest', 'mortgage_id']
+        fields = ('id', 'date', 'amount', 'bank_share', 'debt_decrease', 'debt_rest', 'mortgage_id')
