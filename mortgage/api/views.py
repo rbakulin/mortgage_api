@@ -11,8 +11,8 @@ class ListCreateMortgageAPIView(ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
-    # def perform_create(self, serializer):
-    #     serializer.save(user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
