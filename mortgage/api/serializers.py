@@ -9,7 +9,8 @@ class RealEstateObjectSerializer(serializers.ModelSerializer):
 
 
 class MortgageSerializer(serializers.ModelSerializer):
-    real_estate_object_id = serializers.PrimaryKeyRelatedField(many=False, queryset=RealEstateObject.objects.all())
+    real_estate_object_id = serializers.PrimaryKeyRelatedField(many=False, source='real_estate_object',
+                                                               queryset=RealEstateObject.objects.all())
     user_id = serializers.ReadOnlyField(source='user.id')
 
     class Meta:
