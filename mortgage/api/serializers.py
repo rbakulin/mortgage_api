@@ -1,22 +1,14 @@
 from rest_framework import serializers
-from mortgage.models import Mortgage, RealEstateObject, Payment
-
-
-class RealEstateObjectSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = RealEstateObject
-        fields = ('id', 'price', 'area', 'address', 'built_year')
+from mortgage.models import Mortgage, Payment
 
 
 class MortgageSerializer(serializers.ModelSerializer):
-    real_estate_object_id = serializers.PrimaryKeyRelatedField(many=False, source='real_estate_object',
-                                                               queryset=RealEstateObject.objects.all())
     user_id = serializers.ReadOnlyField(source='user.id')
 
     class Meta:
         model = Mortgage
-        fields = ('id', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date',
-                  'real_estate_object_id', 'user_id')
+        fields = ('id', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'total_amount', 'issue_date',
+                  'user_id')
 
 
 class PaymentSerializer(serializers.ModelSerializer):

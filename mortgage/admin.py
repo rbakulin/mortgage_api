@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Mortgage, RealEstateObject, Payment
+from .models import Mortgage, Payment
 
 
 class PaymentAdmin(admin.ModelAdmin):
@@ -9,10 +9,9 @@ class PaymentAdmin(admin.ModelAdmin):
 
 
 class MortgageAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'percent', 'period', 'first_payment_amount', 'total_amount', 'issue_date',
-                    'real_estate_object', 'user']
+    list_display = ['pk', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'total_amount', 'issue_date',
+                    'user']
 
 
 admin.site.register(Payment, PaymentAdmin)
 admin.site.register(Mortgage, MortgageAdmin)
-admin.site.register(RealEstateObject)
