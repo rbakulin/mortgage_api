@@ -1,4 +1,9 @@
+from math import pow
+from decimal import Decimal
+from dateutil import relativedelta
+from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from mortgage.models import Mortgage, Payment
 from .serializers import MortgageSerializer, PaymentSerializer
@@ -38,3 +43,27 @@ class RetrieveUpdateDestroyPaymentAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
+
+
+class CalcPaymentsSchedule(APIView):
+    def get(self, request, *args, **kwargs):
+        current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
+
+        period_in_months = current_mortgage.period * 12
+        dem = Decimal(current_mortgage.percent / 1200 + 1)
+        power = Decimal(pow(dem, period_in_months))
+        coef = Decimal(power * (dem - 1) / (power - 1))
+
+        amount = round(coef * current_mortgage.total_amount)
+
+        Payment.objects.filter(mortgage_id=current_mortgage.id).delete()
+        for i in range(1, 10):
+            payment = Payment()
+            payment.mortgage = current_mortgage
+            payment.amount = amount
+            payment.date = current_mortgage.issue_date + relativedelta.relativedelta(months=i)
+            payment.save()
+
+        items = Payment.objects.all()
+        serializer = PaymentSerializer(items, many=True)
+        return Response(serializer.data)
