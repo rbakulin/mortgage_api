@@ -3,9 +3,9 @@ from .models import Mortgage, Payment
 
 
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ['pk', 'date', 'amount', 'mortgage', 'bank_share', 'debt_decrease', 'debt_rest']
+    list_display = ['date', 'amount', 'mortgage_id', 'bank_share', 'debt_decrease', 'debt_rest']
     readonly_fields = ('bank_share', 'debt_decrease', 'debt_rest')
-    ordering = ['date']
+    ordering = ['mortgage', 'date']
 
 
 class MortgageAdmin(admin.ModelAdmin):
