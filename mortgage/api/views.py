@@ -57,11 +57,14 @@ class CalcPaymentsSchedule(APIView):
         amount = round(coef * current_mortgage.total_amount)
 
         Payment.objects.filter(mortgage_id=current_mortgage.id).delete()
-        for i in range(1, 10):
+        for i in range(1, period_in_months + 1):
             payment = Payment()
             payment.mortgage = current_mortgage
             payment.amount = amount
             payment.date = current_mortgage.issue_date + relativedelta.relativedelta(months=i)
+            payment.bank_share = payment.calc_bank_share()
+            payment.debt_decrease = payment.calc_debt_decrease()
+            payment.debt_rest = payment.calc_debt_rest()
             payment.save()
 
         items = Payment.objects.all()

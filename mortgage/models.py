@@ -28,6 +28,9 @@ class Payment(CreatedUpdatedModel):
     amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")
     mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, null=True, related_name="payments",
                                  verbose_name='mortgage')
+    bank_share = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="bank share", null=True)
+    debt_decrease = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt decrease", null=True)
+    debt_rest = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt rest", null=True)
 
     def get_prev_payment(self):
         past_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__lt=self.date)
@@ -36,8 +39,7 @@ class Payment(CreatedUpdatedModel):
         else:
             return None
 
-    @property
-    def bank_share(self):
+    def calc_bank_share(self):
         prev_payment = self.get_prev_payment()
         if prev_payment:
             days_from_prev_payment = self.date - prev_payment.date
@@ -48,12 +50,10 @@ class Payment(CreatedUpdatedModel):
         bank_percent = (debt_rest * self.mortgage.percent * days_from_prev_payment.days) / (365 * 100)
         return round(bank_percent, 2)
 
-    @property
-    def debt_decrease(self):
+    def calc_debt_decrease(self):
         return self.amount - self.bank_share
 
-    @property
-    def debt_rest(self):
+    def calc_debt_rest(self):
         prev_payment = self.get_prev_payment()
         if prev_payment:
             prev_amount = prev_payment.debt_rest
