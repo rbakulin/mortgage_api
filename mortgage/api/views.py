@@ -1,6 +1,7 @@
 from math import pow
 from decimal import Decimal
 from dateutil import relativedelta
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -51,15 +52,18 @@ class CalcPaymentsSchedule(ListAPIView):
     pagination_class = CustomPagination
 
     def get(self, request, *args, **kwargs):
-        current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
-        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        try:
+            current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
+            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        except (Mortgage.DoesNotExist, Payment.DoesNotExist):
+            return Response(data={'error': 'Mortgage does not exist'}, status=status.HTTP_404_NOT_FOUND)
 
         period_in_months = current_mortgage.period * 12
         dem = Decimal(current_mortgage.percent / 1200 + 1)
         power = Decimal(pow(dem, period_in_months))
         coef = Decimal(power * (dem - 1) / (power - 1))
 
-        amount = round(coef * current_mortgage.total_amount)
+        amount = round(coef * current_mortgage.total_amount, 2)
 
         current_payments.delete()
         for i in range(1, period_in_months + 1):
