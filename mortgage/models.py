@@ -1,3 +1,6 @@
+from math import pow
+from decimal import Decimal
+from dateutil import relativedelta
 from django.db import models
 
 
@@ -17,6 +20,23 @@ class Mortgage(CreatedUpdatedModel):
     total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
     issue_date = models.DateField(null=True, blank=True, verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
+
+    def calc_payments_schedule(self):
+        period_in_months = self.period * 12
+        dem = Decimal(self.percent / 1200 + 1)
+        power = Decimal(pow(dem, period_in_months))
+        coef = Decimal(power * (dem - 1) / (power - 1))
+        amount = round(coef * self.total_amount, 2)
+
+        for i in range(1, period_in_months + 1):
+            payment = Payment()
+            payment.mortgage = self
+            payment.amount = amount
+            payment.date = self.issue_date + relativedelta.relativedelta(months=i)
+            payment.bank_share = payment.calc_bank_share()
+            payment.debt_decrease = payment.calc_debt_decrease()
+            payment.debt_rest = payment.calc_debt_rest()
+            payment.save()
 
     class Meta:
         db_table = 'mortgage'
