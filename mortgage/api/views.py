@@ -54,9 +54,16 @@ class CalcPaymentsSchedule(ListAPIView):
     def get(self, request, *args, **kwargs):
         try:
             current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
-            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
-        except (Mortgage.DoesNotExist, Payment.DoesNotExist):
+        except Mortgage.DoesNotExist:
             return Response(data={'error': 'Mortgage does not exist'}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        except Payment.DoesNotExist:
+            pass
+        else:
+            # delete old payment schedule if it exists
+            current_payments.delete()
 
         period_in_months = current_mortgage.period * 12
         dem = Decimal(current_mortgage.percent / 1200 + 1)
@@ -65,7 +72,6 @@ class CalcPaymentsSchedule(ListAPIView):
 
         amount = round(coef * current_mortgage.total_amount, 2)
 
-        current_payments.delete()
         for i in range(1, period_in_months + 1):
             payment = Payment()
             payment.mortgage = current_mortgage
