@@ -1,6 +1,3 @@
-from math import pow
-from decimal import Decimal
-from dateutil import relativedelta
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
@@ -55,7 +52,8 @@ class CalcPaymentsSchedule(ListAPIView):
         try:
             current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
         except Mortgage.DoesNotExist:
-            return Response(data={'error': 'Mortgage does not exist'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data={'error': f'Mortgage with id {kwargs["mortgage_id"]} does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
 
         try:
             current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
