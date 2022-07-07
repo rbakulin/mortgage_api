@@ -1,5 +1,5 @@
 asgiref==3.4.0
-Django==3.2.13
+Django==3.2.14
 djangorestframework==3.12.4
 djangorestframework-simplejwt==5.1.0
 PyJWT==2.4.0
