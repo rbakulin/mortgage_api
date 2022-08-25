@@ -49,6 +49,7 @@ class CalcPaymentsSchedule(ListAPIView):
     pagination_class = CustomPagination
 
     def get(self, request, *args, **kwargs):
+        # TODO: DRY try/except
         try:
             current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
         except Mortgage.DoesNotExist:
@@ -64,5 +65,28 @@ class CalcPaymentsSchedule(ListAPIView):
             current_payments.delete()
 
         current_mortgage.calc_payments_schedule()
+        serializer = PaymentSerializer(current_payments, many=True)
+        return Response(data=serializer.data)
+
+
+class AddExtraPayment(ListAPIView):  # TODO: is list view the most suitable?
+    serializer_class = PaymentSerializer
+    queryset = Payment.objects.all()
+    permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
+
+    def post(self, request, *args, **kwargs):
+        try:
+            current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
+        except Mortgage.DoesNotExist:
+            return Response(data={'error': f'Mortgage with id {kwargs["mortgage_id"]} does not exist'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        except Payment.DoesNotExist:
+            current_payments = Payment.objects.none()
+
+        current_mortgage.calc_payments_schedule(extra_payment=request.data)
         serializer = PaymentSerializer(current_payments, many=True)
         return Response(data=serializer.data)

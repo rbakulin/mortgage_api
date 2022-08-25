@@ -1,7 +1,7 @@
 from django.urls import path
 from .views import (ListCreateMortgageAPIView, ListCreatePaymentAPIView,
                     RetrieveUpdateDestroyMortgageAPIView,
-                    RetrieveUpdateDestroyPaymentAPIView, CalcPaymentsSchedule)
+                    RetrieveUpdateDestroyPaymentAPIView, CalcPaymentsSchedule, AddExtraPayment)
 
 
 urlpatterns = [
@@ -10,4 +10,5 @@ urlpatterns = [
     path('payment/', ListCreatePaymentAPIView.as_view(), name='get_post_payments'),
     path('payment/<int:pk>/', RetrieveUpdateDestroyPaymentAPIView.as_view(), name='get_delete_update_payment'),
     path('calc-payment-schedule/<int:mortgage_id>/', CalcPaymentsSchedule.as_view(), name='calc_payment_schedule'),
+    path('add-extra-payment/<int:mortgage_id>/', AddExtraPayment.as_view(), name='add_extra_payment'),
 ]
