@@ -6,6 +6,7 @@ from mortgage.models import Mortgage, Payment
 from .serializers import MortgageSerializer, PaymentSerializer
 from .permissions import IsOwner
 from .pagination import CustomPagination
+from .payment_schedule import PaymentScheduler
 
 
 # MORTGAGE
@@ -64,7 +65,8 @@ class CalcPaymentsSchedule(ListAPIView):
             # delete old payment schedule if it exists
             current_payments.delete()
 
-        current_mortgage.calc_payments_schedule()
+        payment_scheduler = PaymentScheduler(current_mortgage)
+        payment_scheduler.calc_payments_schedule()
         serializer = PaymentSerializer(current_payments, many=True)
         return Response(data=serializer.data)
 
@@ -87,6 +89,8 @@ class AddExtraPayment(ListAPIView):  # TODO: is list view the most suitable?
         except Payment.DoesNotExist:
             current_payments = Payment.objects.none()
 
-        current_mortgage.calc_payments_schedule(extra_payment=request.data)
+        payment_scheduler = PaymentScheduler(current_mortgage, request.data)
+        payment_scheduler.save_extra_payment()
+
         serializer = PaymentSerializer(current_payments, many=True)
         return Response(data=serializer.data)
