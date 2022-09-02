@@ -1,6 +1,5 @@
 from math import pow
 from decimal import Decimal
-from datetime import datetime
 from dateutil import relativedelta
 
 from mortgage.models import Payment
@@ -10,8 +9,6 @@ class PaymentScheduler:
     def __init__(self, mortgage, extra_payment=None):
         self.mortgage = mortgage
         self.extra_payment = extra_payment
-        # TODO: make extra_payment a Payment object?
-        self.extra_payment_date = datetime.strptime(extra_payment['date'], '%Y-%m-%d').date() if extra_payment else None
 
     def calc_payments_schedule(self, start_payment_number=1, amount=None):
         monthly_percent = Decimal(self.mortgage.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
@@ -37,14 +34,10 @@ class PaymentScheduler:
 
     def get_saving_method(self):
         for payment in Payment.objects.filter(mortgage_id=self.mortgage.pk):
-            if payment.date == self.extra_payment_date:
+            if payment.date == self.extra_payment.date:
                 return self.same_date_saving
 
-        extra_payment = Payment(
-            mortgage=self.mortgage,
-            amount=self.extra_payment['amount'],
-            date=self.extra_payment_date,
-        )
+        extra_payment = self.extra_payment
         extra_payment.bank_amount = extra_payment.calc_bank_amount()
         if extra_payment.amount <= extra_payment.bank_amount:
             return self.less_than_bank_percent_saving
@@ -53,7 +46,7 @@ class PaymentScheduler:
 
     def same_date_saving(self):
         # TODO: use get_next_payment()
-        next_payment_date = self.extra_payment_date + relativedelta.relativedelta(months=1)
+        next_payment_date = self.extra_payment.date + relativedelta.relativedelta(months=1)
         time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment_date)
         # count of payments between extra payment and last payment
         months_left = time_left.months + time_left.years * 12
@@ -61,12 +54,7 @@ class PaymentScheduler:
         power = Decimal(pow(monthly_percent + 1, months_left))  # 1 - hardcode in math formula
         coef = Decimal(power * monthly_percent / (power - 1))
 
-        extra_payment = Payment(
-            mortgage=self.mortgage,
-            amount=self.extra_payment['amount'],
-            date=self.extra_payment_date,
-            is_extra=True
-        )
+        extra_payment = self.extra_payment
         extra_payment.bank_amount = 0  # whole extra payment goes for debt decrease
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
@@ -88,12 +76,7 @@ class PaymentScheduler:
         self.calc_payments_schedule(start_payment_number, amount)
 
     def less_than_bank_percent_saving(self):
-        extra_payment = Payment(
-            mortgage=self.mortgage,
-            amount=self.extra_payment['amount'],
-            date=self.extra_payment_date,
-            is_extra=True
-        )
+        extra_payment = self.extra_payment
         extra_payment.bank_amount = self.extra_payment['amount']
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
@@ -108,11 +91,7 @@ class PaymentScheduler:
         next_payment.save()
 
     def more_than_bank_percent_saving(self):
-        extra_payment = Payment(
-            mortgage=self.mortgage,
-            amount=self.extra_payment['amount'],
-            date=self.extra_payment_date,
-        )
+        extra_payment = self.extra_payment
         extra_payment.bank_amount = extra_payment.calc_bank_amount()
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
