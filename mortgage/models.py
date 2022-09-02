@@ -1,4 +1,5 @@
 from django.db import models
+from dateutil import relativedelta
 
 
 class CreatedUpdatedModel(models.Model):
@@ -17,6 +18,10 @@ class Mortgage(CreatedUpdatedModel):
     total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
     issue_date = models.DateField(null=True, blank=True, verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
+
+    @property
+    def last_payment_date(self):
+        return self.issue_date + relativedelta.relativedelta(months=self.period * 12)
 
     class Meta:
         db_table = 'mortgage'
