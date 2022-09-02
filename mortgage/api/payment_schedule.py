@@ -54,11 +54,9 @@ class PaymentScheduler:
             return self.more_than_bank_percent_saving
 
     def same_date_saving(self):
-        # TODO: make it a credit's property
-        last_payment_date = self.mortgage.issue_date + relativedelta.relativedelta(months=self.mortgage.period * 12)
         # TODO: use get_next_payment()
         next_payment_date = self.extra_payment_date + relativedelta.relativedelta(months=1)
-        time_left = relativedelta.relativedelta(last_payment_date, next_payment_date)
+        time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment_date)
         # count of payments between extra payment and last payment
         months_left = time_left.months + time_left.years * 12
         monthly_percent = Decimal(self.mortgage.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
@@ -132,10 +130,8 @@ class PaymentScheduler:
 
         Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
-        # TODO: make it a credit's property
-        last_payment_date = self.mortgage.issue_date + relativedelta.relativedelta(months=self.mortgage.period * 12)
         # TODO: use get_next_payment()
-        time_left = relativedelta.relativedelta(last_payment_date, next_payment.date)
+        time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment.date)
         # count of payments between extra payment and last payment
         months_left = time_left.months + time_left.years * 12
         monthly_percent = Decimal(self.mortgage.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
