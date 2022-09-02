@@ -34,12 +34,11 @@ class Mortgage(CreatedUpdatedModel):
 
 class Payment(CreatedUpdatedModel):
     date = models.DateField(null=True, blank=True, verbose_name="date")
-    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")  # TODO: rename to sum?
+    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")
     mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, null=True, related_name="payments",
                                  verbose_name='mortgage')
     is_extra = models.BooleanField(verbose_name='is extra payment', default=False)
-    # TODO: rename to bank_amount?
-    bank_share = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="bank share", null=True)
+    bank_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="bank amount", null=True)
     debt_decrease = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt decrease", null=True)
     debt_rest = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt rest", null=True)
 
@@ -57,7 +56,7 @@ class Payment(CreatedUpdatedModel):
         else:
             return None
 
-    def calc_bank_share(self):
+    def calc_bank_amount(self):
         prev_payment = self.get_prev_payment()
         if prev_payment:
             time_from_prev_payment = self.date - prev_payment.date
@@ -69,7 +68,7 @@ class Payment(CreatedUpdatedModel):
         return round(bank_percent, 2)
 
     def calc_debt_decrease(self):
-        return self.amount - self.bank_share
+        return self.amount - self.bank_amount
 
     def calc_debt_rest(self):
         prev_payment = self.get_prev_payment()

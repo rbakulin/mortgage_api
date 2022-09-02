@@ -26,7 +26,7 @@ class PaymentScheduler:
                 amount=amount,
                 date=self.mortgage.issue_date + relativedelta.relativedelta(months=i),
             )
-            payment.bank_share = payment.calc_bank_share()
+            payment.bank_amount = payment.calc_bank_amount()
             payment.debt_decrease = payment.calc_debt_decrease()
             payment.debt_rest = payment.calc_debt_rest()
             payment.save()
@@ -45,8 +45,8 @@ class PaymentScheduler:
             amount=self.extra_payment['amount'],
             date=self.extra_payment_date,
         )
-        extra_payment.bank_share = extra_payment.calc_bank_share()
-        if extra_payment.amount <= extra_payment.bank_share:
+        extra_payment.bank_amount = extra_payment.calc_bank_amount()
+        if extra_payment.amount <= extra_payment.bank_amount:
             return self.less_than_bank_percent_saving
         else:
             return self.more_than_bank_percent_saving
@@ -67,7 +67,7 @@ class PaymentScheduler:
             date=self.extra_payment_date,
             is_extra=True
         )
-        extra_payment.bank_share = 0  # whole extra payment goes for debt decrease
+        extra_payment.bank_amount = 0  # whole extra payment goes for debt decrease
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
         extra_payment.save()
@@ -76,7 +76,7 @@ class PaymentScheduler:
         time_between_payments = next_payment.date - extra_payment.date
         days_between_payments = time_between_payments.days
         next_payment.amount = extra_payment.debt_rest * self.mortgage.percent / 100 / 365 * days_between_payments
-        next_payment.bank_share = next_payment.amount
+        next_payment.bank_amount = next_payment.amount
         next_payment.debt_decrease = 0
         next_payment.debt_rest = next_payment.calc_debt_rest()
         next_payment.save()
@@ -94,7 +94,7 @@ class PaymentScheduler:
             date=self.extra_payment_date,
             is_extra=True
         )
-        extra_payment.bank_share = self.extra_payment['amount']
+        extra_payment.bank_amount = self.extra_payment['amount']
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
         extra_payment.save()
@@ -102,7 +102,7 @@ class PaymentScheduler:
         # TODO: if there is no next payment?
         next_payment = extra_payment.get_next_payment()
         next_payment.amount = next_payment.amount - self.extra_payment['amount']
-        next_payment.bank_share = next_payment.calc_bank_share()
+        next_payment.bank_amount = next_payment.calc_bank_amount()
         next_payment.debt_decrease = next_payment.calc_debt_decrease()
         next_payment.debt_rest = next_payment.calc_debt_rest()
         next_payment.save()
@@ -113,15 +113,15 @@ class PaymentScheduler:
             amount=self.extra_payment['amount'],
             date=self.extra_payment_date,
         )
-        extra_payment.bank_share = extra_payment.calc_bank_share()
+        extra_payment.bank_amount = extra_payment.calc_bank_amount()
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
         extra_payment.save()
 
         # TODO: if there is no next payment?
         next_payment = extra_payment.get_next_payment()
-        next_payment.bank_share = next_payment.calc_bank_share()
-        next_payment.amount = next_payment.bank_share
+        next_payment.bank_amount = next_payment.calc_bank_amount()
+        next_payment.amount = next_payment.bank_amount
         next_payment.debt_decrease = next_payment.calc_debt_decrease()
         next_payment.debt_rest = next_payment.calc_debt_rest()
         next_payment.save()
