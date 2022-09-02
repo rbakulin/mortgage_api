@@ -2,6 +2,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
+
+from datetime import datetime
+
 from mortgage.models import Mortgage, Payment
 from .serializers import MortgageSerializer, PaymentSerializer
 from .permissions import IsOwner
@@ -90,7 +93,13 @@ class AddExtraPayment(ListAPIView):  # TODO: is list view the most suitable?
         except Payment.DoesNotExist:
             current_payments = Payment.objects.none()
 
-        payment_scheduler = PaymentScheduler(current_mortgage, request.data)
+        extra_payment = Payment(
+            mortgage=current_mortgage,
+            amount=request.data['amount'],
+            date=datetime.strptime(request.data['date'], '%Y-%m-%d').date(),
+            is_extra=True
+        )
+        payment_scheduler = PaymentScheduler(current_mortgage, extra_payment)
         payment_scheduler.save_extra_payment()
 
         serializer = PaymentSerializer(current_payments, many=True)
