@@ -50,7 +50,7 @@ class Payment(CreatedUpdatedModel):
             return None
 
     def get_next_payment(self):
-        next_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__gte=self.date).exclude(pk=self.pk)
+        next_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__gt=self.date).exclude(pk=self.pk)
         if next_payments:
             return sorted(list(next_payments), key=lambda payment: payment.date)[0]
         else:
