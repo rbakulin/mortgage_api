@@ -20,6 +20,10 @@ class Mortgage(CreatedUpdatedModel):
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
     @property
+    def period_in_months(self):
+        return self.period * 12
+
+    @property
     def last_payment_date(self):
         return self.issue_date + relativedelta.relativedelta(months=self.period * 12)
 
