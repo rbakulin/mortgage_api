@@ -49,6 +49,7 @@ class CalcPaymentsSchedule(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
+    # TODO: replace it with POST (REST)
     def get(self, request, *args, **kwargs):
         # TODO: DRY try/except
         try:
