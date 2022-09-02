@@ -14,15 +14,13 @@ class PaymentScheduler:
         self.extra_payment_date = datetime.strptime(extra_payment['date'], '%Y-%m-%d').date() if extra_payment else None
 
     def calc_payments_schedule(self, start_payment_number=1, amount=None):
-        # TODO: make period in months in model
-        period_in_months = self.mortgage.period * 12
         monthly_percent = Decimal(self.mortgage.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
-        power = Decimal(pow(monthly_percent + 1, period_in_months))  # 1 - hardcode in math formula
+        power = Decimal(pow(monthly_percent + 1, self.mortgage.period_in_months))  # 1 - hardcode in math formula
         coef = Decimal(power * monthly_percent / (power - 1))
 
         amount = round(coef * self.mortgage.total_amount, 2) if not amount else amount
 
-        for i in range(start_payment_number, period_in_months + 1):
+        for i in range(start_payment_number, self.mortgage.period_in_months + 1):
             payment = Payment(
                 mortgage=self.mortgage,
                 amount=amount,
