@@ -1,6 +1,8 @@
-from django.db import models
-from dateutil import relativedelta
 from decimal import Decimal
+
+from django.db import models
+
+from .helpers import days_in_year, get_delta, get_last_day_in_months
 
 
 class CreatedUpdatedModel(models.Model):
@@ -26,7 +28,7 @@ class Mortgage(CreatedUpdatedModel):
 
     @property
     def last_payment_date(self):
-        return self.issue_date + relativedelta.relativedelta(months=self.period * 12)
+        return self.issue_date + get_delta(months=self.period_in_months)
 
     @property
     def monthly_percent(self):
@@ -48,9 +50,10 @@ class Payment(CreatedUpdatedModel):
     debt_rest = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt rest", null=True)
 
     def get_prev_payment(self):
-        past_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__lte=self.date).exclude(pk=self.pk)
+        past_payments = Payment.objects.filter(
+            mortgage_id=self.mortgage_id, date__lte=self.date).exclude(pk=self.pk).order_by('-date', '-is_extra')
         if past_payments:
-            return sorted(list(past_payments), key=lambda payment: payment.date, reverse=True)[0]
+            return past_payments[0]
         else:
             return None
 
@@ -64,12 +67,27 @@ class Payment(CreatedUpdatedModel):
     def calc_bank_amount(self):
         prev_payment = self.get_prev_payment()
         if prev_payment:
-            time_from_prev_payment = self.date - prev_payment.date
+            days_in_prev_month = get_last_day_in_months(prev_payment.date) - prev_payment.date.day
+            days_in_prev_year = days_in_year(prev_payment.date.year)
             debt_rest = prev_payment.debt_rest
         else:
-            time_from_prev_payment = self.date - self.mortgage.issue_date
+            days_in_prev_month = get_last_day_in_months(self.mortgage.issue_date) - self.mortgage.issue_date.day
+            days_in_prev_year = days_in_year(self.mortgage.issue_date.year)
             debt_rest = self.mortgage.total_amount
-        bank_percent = (debt_rest * self.mortgage.percent * time_from_prev_payment.days) / (365 * 100)
+        days_in_current_month = self.date.day
+        days_in_current_year = days_in_year(self.date.year)
+
+        def _get_dividend(for_prev=False):
+            if not for_prev:
+                return debt_rest * self.mortgage.percent * days_in_prev_month
+            return debt_rest * self.mortgage.percent * days_in_current_month
+
+        def _get_divisor(for_prev=False):
+            if not for_prev:
+                return days_in_current_year * 100
+            return days_in_prev_year * 100
+
+        bank_percent = _get_dividend(for_prev=True) / _get_divisor(for_prev=True) + _get_dividend() / _get_divisor()
         return round(bank_percent, 2)
 
     def calc_debt_decrease(self):
