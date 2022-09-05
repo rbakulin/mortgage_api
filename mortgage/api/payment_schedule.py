@@ -10,7 +10,7 @@ class PaymentScheduler:
         self.mortgage = mortgage
         self.extra_payment = extra_payment
 
-    def calc_payments_schedule(self, start_payment_number=1, amount=None):
+    def calc_and_save_payments_schedule(self, start_payment_number=1, amount=None):
         # 1 - hardcode in math formula
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
@@ -63,7 +63,7 @@ class PaymentScheduler:
             Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
             start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-            self.calc_payments_schedule(start_payment_number, amount)
+            self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def less_than_bank_percent_saving(self):
         extra_payment = self.extra_payment
@@ -98,7 +98,7 @@ class PaymentScheduler:
             Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
             start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-            self.calc_payments_schedule(start_payment_number, amount)
+            self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def get_new_schedule_parameters(self, next_payment):
         time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment.date)

@@ -70,7 +70,7 @@ class CalcPaymentsSchedule(ListAPIView):
             current_payments.delete()
 
         payment_scheduler = PaymentScheduler(current_mortgage)
-        payment_scheduler.calc_payments_schedule()
+        payment_scheduler.calc_and_save_payments_schedule()
         serializer = PaymentSerializer(current_payments, many=True)
         return Response(data=serializer.data)
 
