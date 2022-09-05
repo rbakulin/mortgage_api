@@ -1,4 +1,3 @@
-from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -52,46 +51,27 @@ class CalcPaymentsSchedule(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
-    # TODO: replace it with POST (REST)
-    def get(self, request, *args, **kwargs):
-        # TODO: DRY try/except
-        try:
-            current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
-        except Mortgage.DoesNotExist:
-            return Response(data={'error': f'Mortgage with id {kwargs["mortgage_id"]} does not exist'},
-                            status=status.HTTP_404_NOT_FOUND)
+    def post(self, request, *args, **kwargs):
+        current_mortgage = Mortgage.git_mortgage(kwargs['mortgage_id'])
 
-        try:
-            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
-        except Payment.DoesNotExist:
-            current_payments = Payment.objects.none()
-        else:
-            # delete old payment schedule if it exists
-            current_payments.delete()
+        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        current_payments.delete()  # delete old payment schedule if it exists
 
-        payment_scheduler = PaymentScheduler(current_mortgage)
+        payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
         payment_scheduler.calc_and_save_payments_schedule()
         serializer = PaymentSerializer(current_payments, many=True)
         return Response(data=serializer.data)
 
 
-class AddExtraPayment(ListAPIView):  # TODO: is list view the most suitable?
+class AddExtraPayment(ListAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
     def post(self, request, *args, **kwargs):
-        try:
-            current_mortgage = Mortgage.objects.get(pk=kwargs['mortgage_id'])
-        except Mortgage.DoesNotExist:
-            return Response(data={'error': f'Mortgage with id {kwargs["mortgage_id"]} does not exist'},
-                            status=status.HTTP_404_NOT_FOUND)
-
-        try:
-            current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
-        except Payment.DoesNotExist:
-            current_payments = Payment.objects.none()
+        current_mortgage = Mortgage.git_mortgage(kwargs['mortgage_id'])
+        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
 
         extra_payment = Payment(
             mortgage=current_mortgage,
@@ -99,7 +79,7 @@ class AddExtraPayment(ListAPIView):  # TODO: is list view the most suitable?
             date=datetime.strptime(request.data['date'], '%Y-%m-%d').date(),
             is_extra=True
         )
-        payment_scheduler = PaymentScheduler(current_mortgage, extra_payment)
+        payment_scheduler = PaymentScheduler(mortgage=current_mortgage, extra_payment=extra_payment)
         payment_scheduler.save_extra_payment()
 
         serializer = PaymentSerializer(current_payments, many=True)
