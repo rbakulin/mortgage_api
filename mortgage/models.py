@@ -1,5 +1,6 @@
 from django.db import models
 from dateutil import relativedelta
+from decimal import Decimal
 
 
 class CreatedUpdatedModel(models.Model):
@@ -26,6 +27,10 @@ class Mortgage(CreatedUpdatedModel):
     @property
     def last_payment_date(self):
         return self.issue_date + relativedelta.relativedelta(months=self.period * 12)
+
+    @property
+    def monthly_percent(self):
+        return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     class Meta:
         db_table = 'mortgage'
