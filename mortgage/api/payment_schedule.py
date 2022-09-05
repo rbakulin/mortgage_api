@@ -15,8 +15,9 @@ class PaymentScheduler:
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
         amount = round(coef * self.mortgage.total_amount, 2) if not amount else amount
+        before_last_rest = None
 
-        for i in range(start_payment_number, self.mortgage.period_in_months + 1):
+        for i in range(start_payment_number, self.mortgage.period_in_months):
             payment = Payment(
                 mortgage=self.mortgage,
                 amount=amount,
@@ -26,6 +27,18 @@ class PaymentScheduler:
             payment.debt_decrease = payment.calc_debt_decrease()
             payment.debt_rest = payment.calc_debt_rest()
             payment.save()
+            before_last_rest = payment.debt_rest
+
+        # add last payment manually
+        payment = Payment(
+            mortgage=self.mortgage,
+            amount=before_last_rest,  # the amount of last payment is equal to previous payment's debt rest
+            date=self.mortgage.last_payment_date,
+        )
+        payment.bank_amount = payment.calc_bank_amount()
+        payment.debt_decrease = payment.calc_debt_decrease()
+        payment.debt_rest = 0
+        payment.save()
 
     def save_extra_payment(self):
         saving_method = PaymentScheduler.get_saving_method(self)
@@ -52,12 +65,10 @@ class PaymentScheduler:
 
         next_payment = self.extra_payment.get_next_payment()
         if next_payment:
-            time_between_payments = next_payment.date - extra_payment.date
-            days_between_payments = time_between_payments.days
-            next_payment.amount = extra_payment.debt_rest * self.mortgage.percent / 100 / 365 * days_between_payments
+            next_payment.amount = next_payment.calc_bank_amount()
             next_payment.bank_amount = next_payment.amount
             next_payment.debt_decrease = 0
-            next_payment.debt_rest = next_payment.calc_debt_rest() - extra_payment.debt_decrease
+            next_payment.debt_rest = next_payment.calc_debt_rest() - next_payment.debt_decrease
             next_payment.save()
 
             Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
@@ -102,8 +113,7 @@ class PaymentScheduler:
 
     def get_new_schedule_parameters(self, next_payment):
         time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment.date)
-        # count of payments between extra payment and last payment
-        months_left = time_left.months + time_left.years * 12
+        months_left = time_left.months + time_left.years * 12  # count of payments between extra and last payments
         power = Decimal(pow(self.mortgage.monthly_percent + 1, months_left))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
 
