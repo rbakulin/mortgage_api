@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db import models
 
-from .helpers import days_in_year, get_delta, get_last_day_in_months
+from .helpers import days_in_year, get_timedelta, get_last_day_in_months
 
 
 class CreatedUpdatedModel(models.Model):
@@ -28,7 +28,7 @@ class Mortgage(CreatedUpdatedModel):
 
     @property
     def last_payment_date(self):
-        return self.issue_date + get_delta(months=self.period_in_months)
+        return self.issue_date + get_timedelta(months=self.period_in_months)
 
     @property
     def monthly_percent(self):

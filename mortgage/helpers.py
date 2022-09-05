@@ -11,5 +11,9 @@ def get_last_day_in_months(date):
     return calendar.monthrange(year, month)[1]
 
 
-def get_delta(months):
+def get_timedelta(months):
     return relativedelta.relativedelta(months=months)
+
+
+def get_time_difference(date1, date2):
+    return relativedelta.relativedelta(date1, date2)
