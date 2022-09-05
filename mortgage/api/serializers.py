@@ -17,3 +17,9 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = ('id', 'date', 'amount', 'bank_amount', 'debt_decrease', 'debt_rest', 'mortgage_id')
+
+
+class BasicPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ('date', 'amount')

@@ -1,8 +1,6 @@
 from decimal import Decimal
 
 from django.db import models
-from rest_framework import status
-from rest_framework.response import Response
 
 from .helpers import days_in_year, get_timedelta, get_last_day_in_months
 
@@ -19,9 +17,9 @@ class Mortgage(CreatedUpdatedModel):
     percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="percent")
     period = models.IntegerField(verbose_name="period")
     first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount")
-    apartment_price = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="apartment price", null=True)
+    apartment_price = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="apartment price")
     total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
-    issue_date = models.DateField(null=True, blank=True, verbose_name="issue date")
+    issue_date = models.DateField(verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
     @property
@@ -37,13 +35,16 @@ class Mortgage(CreatedUpdatedModel):
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     @staticmethod
-    def git_mortgage(mortgage_id):
+    def get_mortgage(mortgage_id):
         try:
             current_mortgage = Mortgage.objects.get(pk=mortgage_id)
         except Mortgage.DoesNotExist:
-            return Response(data={'error': f'Mortgage with id {mortgage_id} does not exist'},
-                            status=status.HTTP_404_NOT_FOUND)
+            return None
         return current_mortgage
+
+    @staticmethod
+    def get_not_found_error_message(mortgage_id):
+        return f'Mortgage does not exist with given id: {mortgage_id}'
 
     class Meta:
         db_table = 'mortgage'
@@ -51,9 +52,9 @@ class Mortgage(CreatedUpdatedModel):
 
 
 class Payment(CreatedUpdatedModel):
-    date = models.DateField(null=True, blank=True, verbose_name="date")
+    date = models.DateField(verbose_name="date")
     amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")
-    mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, null=True, related_name="payments",
+    mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, related_name="payments",
                                  verbose_name='mortgage')
     is_extra = models.BooleanField(verbose_name='is extra payment', default=False)
     bank_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="bank amount", null=True)
