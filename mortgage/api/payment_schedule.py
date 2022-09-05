@@ -1,8 +1,8 @@
 from decimal import Decimal
-from dateutil import relativedelta
 from math import pow
 
 from mortgage.models import Payment
+from mortgage.helpers import get_timedelta, get_time_difference
 
 
 class PaymentScheduler:
@@ -21,7 +21,7 @@ class PaymentScheduler:
             payment = Payment(
                 mortgage=self.mortgage,
                 amount=amount,
-                date=self.mortgage.issue_date + relativedelta.relativedelta(months=i),
+                date=self.mortgage.issue_date + get_timedelta(months=i),
             )
             payment.bank_amount = payment.calc_bank_amount()
             payment.debt_decrease = payment.calc_debt_decrease()
@@ -112,11 +112,11 @@ class PaymentScheduler:
             self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def get_new_schedule_parameters(self, next_payment):
-        time_left = relativedelta.relativedelta(self.mortgage.last_payment_date, next_payment.date)
+        time_left = get_time_difference(self.mortgage.last_payment_date, next_payment.date)
         months_left = time_left.months + time_left.years * 12  # count of payments between extra and last payments
         power = Decimal(pow(self.mortgage.monthly_percent + 1, months_left))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
 
-        start_payment_number = relativedelta.relativedelta(next_payment.date, self.mortgage.issue_date).months + 1
+        start_payment_number = get_time_difference(next_payment.date, self.mortgage.issue_date).months + 1
         amount = round(coef * self.extra_payment.debt_rest, 2)
         return start_payment_number, amount
