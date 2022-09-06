@@ -17,10 +17,13 @@ class Mortgage(CreatedUpdatedModel):
     percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="percent")
     period = models.IntegerField(verbose_name="period")
     first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount")
-    apartment_price = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="apartment price")
     total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
     issue_date = models.DateField(verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
+
+    @property
+    def apartment_price(self):
+        return self.first_payment_amount + self.total_amount
 
     @property
     def period_in_months(self):

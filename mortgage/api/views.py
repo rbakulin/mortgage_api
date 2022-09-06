@@ -31,7 +31,20 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Mortgage.objects.all()
     permission_classes = [IsOwner, IsAuthenticated]
 
+    def update(self, request, *args, **kwargs):
+        response = super().update(request, partial=True, *args, **kwargs)
+        # should update payment schedule after updating mortgage itself
+        current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
+        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        current_payments.delete()  # delete old payment schedule if it exists
+        payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
+        payment_scheduler.calc_and_save_payments_schedule()
 
+        return response
+
+
+# TODO: forbid create, update, destroy methods
+#  (error example: payment can not be created via API, use calc-payment-schedule instead)
 # PAYMENT
 class ListCreatePaymentAPIView(ListCreateMortgageAPIView):
     serializer_class = PaymentSerializer
@@ -56,7 +69,7 @@ class CalcPaymentsSchedule(ListAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'error': Mortgage.get_not_found_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
                             status=status.HTTP_404_NOT_FOUND)
 
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
@@ -78,7 +91,7 @@ class AddExtraPayment(ListAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'error': Mortgage.get_not_found_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
                             status=status.HTTP_404_NOT_FOUND)
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
 
