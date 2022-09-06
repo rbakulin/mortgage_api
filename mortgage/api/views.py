@@ -43,20 +43,26 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
         return response
 
 
-# TODO: forbid create, update, destroy methods
-#  (error example: payment can not be created via API, use calc-payment-schedule instead)
 # PAYMENT
-class ListCreatePaymentAPIView(ListCreateMortgageAPIView):
+class ListPaymentAPIView(ListAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
+    def get(self, request, *args, **kwargs):
+        mortgage_id = kwargs['mortgage_id']
+        current_mortgage = Mortgage.get_mortgage(mortgage_id)
+        if not current_mortgage:
+            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
+                            status=status.HTTP_404_NOT_FOUND)
+        if current_mortgage.user != request.user:
+            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+                            status=status.HTTP_403_FORBIDDEN)
 
-class RetrieveUpdateDestroyPaymentAPIView(RetrieveUpdateDestroyAPIView):
-    serializer_class = PaymentSerializer
-    queryset = Payment.objects.all()
-    permission_classes = [IsAuthenticated]
+        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
+        serializer = PaymentSerializer(current_payments, many=True)
+        return Response(data=serializer.data)
 
 
 class CalcPaymentsSchedule(ListAPIView):
@@ -71,6 +77,9 @@ class CalcPaymentsSchedule(ListAPIView):
         if not current_mortgage:
             return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
                             status=status.HTTP_404_NOT_FOUND)
+        if current_mortgage.user != request.user:
+            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+                            status=status.HTTP_403_FORBIDDEN)
 
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
         current_payments.delete()  # delete old payment schedule if it exists
@@ -93,6 +102,9 @@ class AddExtraPayment(ListAPIView):
         if not current_mortgage:
             return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
                             status=status.HTTP_404_NOT_FOUND)
+        if current_mortgage.user != request.user:
+            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+                            status=status.HTTP_403_FORBIDDEN)
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
 
         serializer = self.serializer_class(data=request.data)
