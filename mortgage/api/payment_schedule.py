@@ -1,8 +1,8 @@
 from decimal import Decimal
 from math import pow
 
+from mortgage.helpers import get_time_difference, get_timedelta
 from mortgage.models import Payment
-from mortgage.helpers import get_timedelta, get_time_difference
 
 
 class PaymentScheduler:
