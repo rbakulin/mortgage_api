@@ -53,6 +53,10 @@ class ListPaymentAPIView(ListAPIView):
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
 
+    def get_queryset(self):
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        return current_payments
+
     def get(self, request, *args, **kwargs):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
@@ -63,16 +67,19 @@ class ListPaymentAPIView(ListAPIView):
             return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
                             status=status.HTTP_403_FORBIDDEN)
 
-        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
-        serializer = PaymentSerializer(current_payments, many=True)
-        return Response(data=serializer.data)
+        response = super().get(request, *args, **kwargs)
+        return response
 
 
-class CalcPaymentsSchedule(ListAPIView):
+class CalcPaymentsSchedule(ListCreateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        return current_payments
 
     def post(self, request, *args, **kwargs):
         mortgage_id = kwargs['mortgage_id']
@@ -89,15 +96,19 @@ class CalcPaymentsSchedule(ListAPIView):
 
         payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
         payment_scheduler.calc_and_save_payments_schedule()
-        serializer = PaymentSerializer(current_payments, many=True)
-        return Response(data=serializer.data)
+        response = super().get(request, *args, **kwargs)
+        return response
 
 
-class AddExtraPayment(ListAPIView):
+class AddExtraPayment(ListCreateAPIView):
     serializer_class = BasicPaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
     pagination_class = CustomPagination
+
+    def get_queryset(self):
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        return current_payments
 
     def post(self, request, *args, **kwargs):
         mortgage_id = kwargs['mortgage_id']
@@ -108,7 +119,6 @@ class AddExtraPayment(ListAPIView):
         if current_mortgage.user != request.user:
             return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
                             status=status.HTTP_403_FORBIDDEN)
-        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
 
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
@@ -125,5 +135,6 @@ class AddExtraPayment(ListAPIView):
         payment_scheduler = PaymentScheduler(mortgage=current_mortgage, extra_payment=extra_payment)
         payment_scheduler.save_extra_payment()
 
-        serializer = PaymentSerializer(current_payments, many=True)
-        return Response(data=serializer.data)
+        self.serializer_class = PaymentSerializer
+        response = super().get(request, *args, **kwargs)
+        return response
