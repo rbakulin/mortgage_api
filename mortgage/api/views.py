@@ -61,10 +61,10 @@ class ListPaymentAPIView(ListAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_found_error_message()},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
                             status=status.HTTP_403_FORBIDDEN)
 
         response = super().get(request, *args, **kwargs)
@@ -85,10 +85,10 @@ class CalcPaymentsSchedule(ListCreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_found_error_message()},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
                             status=status.HTTP_403_FORBIDDEN)
 
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
@@ -114,10 +114,10 @@ class AddExtraPayment(ListCreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_found_error_message()},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message(mortgage_id)},
+            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
                             status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.serializer_class(data=request.data)

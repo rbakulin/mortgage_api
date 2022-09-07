@@ -46,12 +46,12 @@ class Mortgage(CreatedUpdatedModel):
         return current_mortgage
 
     @staticmethod
-    def get_not_found_error_message(mortgage_id):
-        return f'Mortgage does not exist with given id: {mortgage_id}'
+    def get_not_found_error_message():
+        return 'Mortgage does not exist'
 
     @staticmethod
-    def get_not_belong_error_message(mortgage_id):
-        return f'Mortgage {mortgage_id} does not belong to current user'
+    def get_not_belong_error_message():
+        return 'Mortgage does not belong to current user'
 
     class Meta:
         db_table = 'mortgage'
