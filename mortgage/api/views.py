@@ -54,7 +54,7 @@ class ListPaymentAPIView(ListAPIView):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'created_at')
         return current_payments
 
     def get(self, request, *args, **kwargs):
@@ -78,7 +78,7 @@ class CalcPaymentsSchedule(ListCreateAPIView):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'created_at')
         return current_payments
 
     def post(self, request, *args, **kwargs):
@@ -107,7 +107,7 @@ class AddExtraPayment(ListCreateAPIView):
     pagination_class = CustomPagination
 
     def get_queryset(self):
-        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'is_extra')
+        current_payments = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'created_at')
         return current_payments
 
     def post(self, request, *args, **kwargs):

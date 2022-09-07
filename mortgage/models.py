@@ -70,14 +70,14 @@ class Payment(CreatedUpdatedModel):
 
     def get_prev_payment(self):
         past_payments = Payment.objects.filter(
-            mortgage_id=self.mortgage_id, date__lte=self.date).exclude(pk=self.pk).order_by('-date', '-is_extra')
+            mortgage_id=self.mortgage_id, date__lte=self.date).exclude(pk=self.pk).order_by('-date', '-created_at')
         if past_payments:
             return past_payments[0]
         else:
             return None
 
     def get_next_payment(self):
-        next_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__gt=self.date).exclude(pk=self.pk)
+        next_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__gt=self.date)
         if next_payments:
             return sorted(list(next_payments), key=lambda payment: payment.date)[0]
         else:
