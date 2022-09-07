@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db import models
 
-from .helpers import days_in_year, get_timedelta, get_last_day_in_months
+from .helpers import days_in_year, get_last_day_in_months, get_timedelta
 
 
 class CreatedUpdatedModel(models.Model):

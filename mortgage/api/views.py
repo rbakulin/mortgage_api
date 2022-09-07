@@ -1,15 +1,18 @@
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.generics import RetrieveUpdateDestroyAPIView, ListCreateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
-
 from datetime import datetime
 
+from rest_framework import status
+from rest_framework.generics import (ListAPIView, ListCreateAPIView,
+                                     RetrieveUpdateDestroyAPIView)
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from mortgage.models import Mortgage, Payment
-from .serializers import BasicPaymentSerializer, MortgageSerializer, PaymentSerializer
-from .permissions import IsOwner
+
 from .pagination import CustomPagination
 from .payment_schedule import PaymentScheduler
+from .permissions import IsOwner
+from .serializers import (BasicPaymentSerializer, MortgageSerializer,
+                          PaymentSerializer)
 
 
 # MORTGAGE
