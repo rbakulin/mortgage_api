@@ -64,32 +64,30 @@ class PaymentScheduler:
         extra_payment.save()
 
         next_payment = self.extra_payment.get_next_payment()
-        if next_payment:
-            next_payment.amount = next_payment.calc_bank_amount()
-            next_payment.bank_amount = next_payment.amount
-            next_payment.debt_decrease = 0
-            next_payment.debt_rest = next_payment.calc_debt_rest() - next_payment.debt_decrease
-            next_payment.save()
+        next_payment.amount = next_payment.calc_bank_amount()
+        next_payment.bank_amount = next_payment.amount
+        next_payment.debt_decrease = 0
+        next_payment.debt_rest = next_payment.calc_debt_rest() - next_payment.debt_decrease
+        next_payment.save()
 
-            Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
+        Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
-            start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-            self.calc_and_save_payments_schedule(start_payment_number, amount)
+        start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
+        self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def less_than_bank_percent_saving(self):
         extra_payment = self.extra_payment
-        extra_payment.bank_amount = self.extra_payment['amount']
+        extra_payment.bank_amount = self.extra_payment.amount
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
         extra_payment.debt_rest = extra_payment.calc_debt_rest()
         extra_payment.save()
 
         next_payment = extra_payment.get_next_payment()
-        if next_payment:
-            next_payment.amount = next_payment.amount - self.extra_payment['amount']
-            next_payment.bank_amount = next_payment.calc_bank_amount()
-            next_payment.debt_decrease = next_payment.calc_debt_decrease()
-            next_payment.debt_rest = next_payment.calc_debt_rest()
-            next_payment.save()
+        next_payment.amount = next_payment.amount - self.extra_payment.amount
+        next_payment.bank_amount = next_payment.calc_bank_amount()
+        next_payment.debt_decrease = next_payment.calc_debt_decrease()
+        next_payment.debt_rest = next_payment.calc_debt_rest()
+        next_payment.save()
 
     def more_than_bank_percent_saving(self):
         extra_payment = self.extra_payment
@@ -99,17 +97,16 @@ class PaymentScheduler:
         extra_payment.save()
 
         next_payment = extra_payment.get_next_payment()
-        if next_payment:
-            next_payment.bank_amount = next_payment.calc_bank_amount()
-            next_payment.amount = next_payment.bank_amount
-            next_payment.debt_decrease = next_payment.calc_debt_decrease()
-            next_payment.debt_rest = next_payment.calc_debt_rest()
-            next_payment.save()
+        next_payment.bank_amount = next_payment.calc_bank_amount()
+        next_payment.amount = next_payment.bank_amount
+        next_payment.debt_decrease = next_payment.calc_debt_decrease()
+        next_payment.debt_rest = next_payment.calc_debt_rest()
+        next_payment.save()
 
-            Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
+        Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
-            start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-            self.calc_and_save_payments_schedule(start_payment_number, amount)
+        start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
+        self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def get_new_schedule_parameters(self, next_payment):
         time_left = get_time_difference(self.mortgage.last_payment_date, next_payment.date)

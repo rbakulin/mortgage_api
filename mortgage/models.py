@@ -34,6 +34,10 @@ class Mortgage(CreatedUpdatedModel):
         return self.issue_date + get_timedelta(months=self.period_in_months)
 
     @property
+    def first_payment_date(self):
+        return self.issue_date + get_timedelta(months=1)
+
+    @property
     def monthly_percent(self):
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
@@ -44,14 +48,6 @@ class Mortgage(CreatedUpdatedModel):
         except Mortgage.DoesNotExist:
             return None
         return current_mortgage
-
-    @staticmethod
-    def get_not_found_error_message():
-        return 'Mortgage does not exist'
-
-    @staticmethod
-    def get_not_belong_error_message():
-        return 'Mortgage does not belong to current user'
 
     class Meta:
         db_table = 'mortgage'

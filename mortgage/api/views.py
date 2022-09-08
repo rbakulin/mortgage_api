@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from mortgage.models import Mortgage, Payment
+from mortgage import errors
 
 from .pagination import CustomPagination
 from .payment_schedule import PaymentScheduler
@@ -61,10 +62,10 @@ class ListPaymentAPIView(ListAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
 
         response = super().get(request, *args, **kwargs)
@@ -85,10 +86,10 @@ class CalcPaymentsSchedule(ListCreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
 
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
@@ -114,24 +115,28 @@ class AddExtraPayment(ListCreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': Mortgage.get_not_found_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': Mortgage.get_not_belong_error_message()},
+            return Response(data={'detail': errors.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
-
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         extra_payment = Payment(
             mortgage=current_mortgage,
             amount=request.data['amount'],
             date=datetime.strptime(request.data['date'], '%Y-%m-%d').date(),
             is_extra=True
         )
+        if not current_mortgage.first_payment_date < extra_payment.date < current_mortgage.last_payment_date:
+            return Response(data={'detail': errors.PAYMENT_DATE_INCORRECT},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         payment_scheduler = PaymentScheduler(mortgage=current_mortgage, extra_payment=extra_payment)
         payment_scheduler.save_extra_payment()
 
