@@ -20,7 +20,7 @@ env = environ.Env()
 SECRET_KEY = env.str('SECRET_KEY', default='not-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG', default=False)
 
 ALLOWED_HOSTS = []
 
@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
+
     'mortgage',
     'authentication',
 ]
