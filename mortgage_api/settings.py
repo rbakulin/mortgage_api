@@ -1,15 +1,23 @@
 import os
 from datetime import timedelta
 
+import environ
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+env_path = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_path):
+    environ.Env.read_env(env_path)
+
+env = environ.Env()
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'v_c&2_#vv+q3we4*d^-tp-)788d8x0(q#il$-id&^(zp@esoek'
+SECRET_KEY = env.str('SECRET_KEY', default='not-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
