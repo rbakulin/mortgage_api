@@ -137,6 +137,11 @@ class AddExtraPayment(ListCreateAPIView):
             return Response(data={'detail': errors.PAYMENT_DATE_INCORRECT},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        prev_extra_payment = extra_payment.get_prev_payment()
+        if extra_payment.amount > prev_extra_payment.debt_rest:
+            return Response(data={'detail': errors.PAYMENT_AMOUNT_INCORRECT},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         payment_scheduler = PaymentScheduler(mortgage=current_mortgage, extra_payment=extra_payment)
         payment_scheduler.save_extra_payment()
 

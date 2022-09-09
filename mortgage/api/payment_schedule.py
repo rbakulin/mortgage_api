@@ -1,7 +1,7 @@
 from decimal import Decimal
 from math import pow
 
-from mortgage.helpers import get_time_difference, get_timedelta
+from mortgage.helpers import get_months_difference, get_timedelta
 from mortgage.models import Payment
 
 
@@ -15,7 +15,6 @@ class PaymentScheduler:
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
         amount = round(coef * self.mortgage.total_amount, 2) if not amount else amount
-        before_last_rest = None
 
         for i in range(start_payment_number, self.mortgage.period_in_months):
             payment = Payment(
@@ -27,18 +26,18 @@ class PaymentScheduler:
             payment.debt_decrease = payment.calc_debt_decrease()
             payment.debt_rest = payment.calc_debt_rest()
             payment.save()
-            before_last_rest = payment.debt_rest
 
         # add last payment manually
-        payment = Payment(
+        last_payment = Payment(
             mortgage=self.mortgage,
-            amount=before_last_rest,  # the amount of last payment is equal to previous payment's debt rest
+            amount=0,
             date=self.mortgage.last_payment_date,
         )
-        payment.bank_amount = payment.calc_bank_amount()
-        payment.debt_decrease = payment.calc_debt_decrease()
-        payment.debt_rest = 0
-        payment.save()
+        last_payment.amount = last_payment.get_prev_payment().debt_rest
+        last_payment.bank_amount = last_payment.calc_bank_amount()
+        last_payment.debt_decrease = last_payment.calc_debt_decrease()
+        last_payment.debt_rest = 0
+        last_payment.save()
 
     def save_extra_payment(self):
         saving_method = PaymentScheduler.get_saving_method(self)
@@ -109,11 +108,10 @@ class PaymentScheduler:
         self.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def get_new_schedule_parameters(self, next_payment):
-        time_left = get_time_difference(self.mortgage.last_payment_date, next_payment.date)
-        months_left = time_left.months + time_left.years * 12  # count of payments between extra and last payments
+        months_left = get_months_difference(self.mortgage.last_payment_date, next_payment.date)
         power = Decimal(pow(self.mortgage.monthly_percent + 1, months_left))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
 
-        start_payment_number = get_time_difference(next_payment.date, self.mortgage.issue_date).months + 1
+        start_payment_number = get_months_difference(next_payment.date, self.mortgage.issue_date) + 1
         amount = round(coef * self.extra_payment.debt_rest, 2)
         return start_payment_number, amount
