@@ -91,8 +91,12 @@ SIMPLE_JWT = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': env.str('DATABASE_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': env.str('DATABASE_NAME', os.path.join(BASE_DIR, "db.sqlite3")),
+        'USER': env.str('DATABASE_USER', ''),
+        'PASSWORD': env.str('DATABASE_PASSWORD', ''),
+        'HOST': env.str('DATABASE_HOST', ''),
+        'PORT': env.str('DATABASE_PORT', '5432'),
     }
 }
 
