@@ -7,7 +7,7 @@ MORTGAGE-API
 ---
 
 ## Run
-1. Run mirations:
+1. Run migrations:
 ```shell
 docker-compose run app python manage.py migrate
 ```
@@ -32,7 +32,7 @@ docker-compose up
     "password": "adminadmin"
 }
 ```
-3. Create a mortgage:<br><b>POST</b> `127.0.0.1:8000/api/v1/mortgage/`<br>headers: {Authorization: Bearer <your_token_value>}
+3. Create a mortgage:<br><b>POST</b> `127.0.0.1:8000/api/v1/mortgage/`<br><em>headers: {Authorization: Bearer <your_token_value>}</em>
 ```json
 {
     "percent": "8.20",
@@ -42,5 +42,5 @@ docker-compose up
     "issue_date": "2021-09-04"
 }
 ```
-4. Calculate mortgage schedule: <br><b>POST</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/calc-payment-schedule/`<br>headers: {Authorization: Bearer <your_token_value>}
-5. Check calculated payments: <br><b>GET</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/payment/?page_size=100&page=1`<br>headers: {Authorization: Bearer <your_token_value>}
+4. Calculate mortgage schedule: <br><b>POST</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/calc-payment-schedule/`<br><em>headers: {Authorization: Bearer <your_token_value>}</em>
+5. Check calculated payments: <br><b>GET</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/payment/?page_size=100&page=1`<br><em>headers: {Authorization: Bearer <your_token_value>}</em>
