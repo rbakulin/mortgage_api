@@ -15,7 +15,7 @@ docker-compose run app python manage.py migrate
 ```shell
 docker-compose up
 ```
-## Quiqstart
+## Quickstart
 1. Create a user:<br><b>POST</b> `127.0.0.1:8000/auth/register/`
 ```json
 {
