@@ -1,5 +1,5 @@
 <h1 align="center" style="font-size: 3rem;">
-MORTGAGE-API
+MORTGAGE-API 🏠
 </h1>
 <p align="center">
  <em>REST API for calculating mortgage parametrs: payment schedule, bank percent, extra payments etc.</em></p>
@@ -56,8 +56,8 @@ All endpoints description: `127.0.0.1:8000/swagger/`
 1. All `mortgage/` endpoints are available only for registered users.
 2. User can only see mortgages that were created by himself.
 3. After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
-4. You can't CRUD payments directly via API -- use `calc-payment-schedule/` endpoint instead.
+4. You can't CRUD payments directly via API - use `calc-payment-schedule/` endpoint instead.
 5. There are a few rules for adding extra payments `add-extra-payment/`: 
    - Extra payment's date should be bigger than first payment's date and lower than last payment's date.
    - Extra payment's amount should be less than previous payment's debt rest.
-6. Access token expires in 1 hour, refresh token -- in 24 hours. Use `token/refresh/` to refresh the token. 
+6. Access token expires in 1 hour, refresh token - in 24 hours. Use `token/refresh/` to refresh the token. 
