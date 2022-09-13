@@ -1,19 +1,19 @@
 from decimal import Decimal
 from math import pow
+from typing import Callable, Optional, Tuple
 
 from django.db import transaction
 
 from mortgage.helpers import get_months_difference, get_timedelta
-from mortgage.models import Payment
+from mortgage.models import Mortgage, Payment
 
 
 class PaymentScheduler:
-    def __init__(self, mortgage, extra_payment=None):
+    def __init__(self, mortgage: Mortgage) -> None:
         self.mortgage = mortgage
-        self.extra_payment = extra_payment
 
     @transaction.atomic()
-    def calc_and_save_payments_schedule(self, start_payment_number=1, amount=None):
+    def calc_and_save_payments_schedule(self, start_payment_number: int = 1, amount: Optional[Decimal] = None) -> None:
         # 1 - hardcode in math formula
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
@@ -42,11 +42,17 @@ class PaymentScheduler:
         last_payment.debt_rest = 0
         last_payment.save()
 
-    def save_extra_payment(self):
-        saving_method = PaymentScheduler.get_saving_method(self)
+
+class ExtraPaymentCalculator:
+    def __init__(self, mortgage: Mortgage, extra_payment: Payment) -> None:
+        self.mortgage = mortgage
+        self.extra_payment = extra_payment
+
+    def save_extra_payment(self) -> None:
+        saving_method = ExtraPaymentCalculator.get_saving_method(self)
         return saving_method()
 
-    def get_saving_method(self):
+    def get_saving_method(self) -> Callable:
         for payment in Payment.objects.filter(mortgage_id=self.mortgage.pk):
             if payment.date == self.extra_payment.date:
                 return self.same_date_saving
@@ -59,7 +65,7 @@ class PaymentScheduler:
             return self.more_than_bank_percent_saving
 
     @transaction.atomic(durable=True)
-    def same_date_saving(self):
+    def same_date_saving(self) -> None:
         extra_payment = self.extra_payment
         extra_payment.bank_amount = 0  # whole extra payment goes for debt decrease
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
@@ -76,10 +82,11 @@ class PaymentScheduler:
         Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-        self.calc_and_save_payments_schedule(start_payment_number, amount)
+        payment_scheduler = PaymentScheduler(mortgage=self.mortgage)
+        payment_scheduler.calc_and_save_payments_schedule(start_payment_number, amount)
 
     @transaction.atomic(durable=True)
-    def less_than_bank_percent_saving(self):
+    def less_than_bank_percent_saving(self) -> None:
         extra_payment = self.extra_payment
         extra_payment.bank_amount = self.extra_payment.amount
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
@@ -94,7 +101,7 @@ class PaymentScheduler:
         next_payment.save()
 
     @transaction.atomic(durable=True)
-    def more_than_bank_percent_saving(self):
+    def more_than_bank_percent_saving(self) -> None:
         extra_payment = self.extra_payment
         extra_payment.bank_amount = extra_payment.calc_bank_amount()
         extra_payment.debt_decrease = extra_payment.calc_debt_decrease()
@@ -111,9 +118,10 @@ class PaymentScheduler:
         Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-        self.calc_and_save_payments_schedule(start_payment_number, amount)
+        payment_scheduler = PaymentScheduler(mortgage=self.mortgage)
+        payment_scheduler.calc_and_save_payments_schedule(start_payment_number, amount)
 
-    def get_new_schedule_parameters(self, next_payment):
+    def get_new_schedule_parameters(self, next_payment: Payment) -> Tuple[int, Decimal]:
         months_left = get_months_difference(self.mortgage.last_payment_date, next_payment.date)
         power = Decimal(pow(self.mortgage.monthly_percent + 1, months_left))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))

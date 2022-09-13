@@ -1,4 +1,8 @@
+from __future__ import annotations
+
+from datetime import date
 from decimal import Decimal
+from typing import Optional
 
 from django.db import models
 
@@ -22,27 +26,27 @@ class Mortgage(CreatedUpdatedModel):
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
     @property
-    def apartment_price(self):
+    def apartment_price(self) -> Decimal:
         return self.first_payment_amount + self.total_amount
 
     @property
-    def period_in_months(self):
+    def period_in_months(self) -> int:
         return self.period * 12
 
     @property
-    def last_payment_date(self):
+    def last_payment_date(self) -> date:
         return self.issue_date + get_timedelta(months=self.period_in_months)
 
     @property
-    def first_payment_date(self):
+    def first_payment_date(self) -> date:
         return self.issue_date + get_timedelta(months=1)
 
     @property
-    def monthly_percent(self):
+    def monthly_percent(self) -> Decimal:
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     @staticmethod
-    def get_mortgage(mortgage_id):
+    def get_mortgage(mortgage_id: int) -> Optional[Mortgage]:
         try:
             current_mortgage = Mortgage.objects.get(pk=mortgage_id)
         except Mortgage.DoesNotExist:
@@ -64,22 +68,16 @@ class Payment(CreatedUpdatedModel):
     debt_decrease = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt decrease", null=True)
     debt_rest = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="debt rest", null=True)
 
-    def get_prev_payment(self):
-        past_payments = Payment.objects.filter(
-            mortgage_id=self.mortgage_id, date__lte=self.date).exclude(pk=self.pk).order_by('-date', '-created_at')
-        if past_payments:
-            return past_payments[0]
-        else:
-            return None
+    def get_prev_payment(self) -> Payment:
+        return Payment.objects.filter(
+            mortgage_id=self.mortgage_id,
+            date__lte=self.date
+        ).exclude(pk=self.pk).order_by('-date', '-created_at').first()
 
-    def get_next_payment(self):
-        next_payments = Payment.objects.filter(mortgage_id=self.mortgage_id, date__gt=self.date)
-        if next_payments:
-            return sorted(list(next_payments), key=lambda payment: payment.date)[0]
-        else:
-            return None
+    def get_next_payment(self) -> Payment:
+        return Payment.objects.filter(mortgage_id=self.mortgage_id, date__gt=self.date).order_by('date').first()
 
-    def calc_bank_amount(self):
+    def calc_bank_amount(self) -> Decimal:
         prev_payment = self.get_prev_payment()
         if prev_payment:
             days_in_prev_month = get_last_day_in_months(prev_payment.date) - prev_payment.date.day
@@ -92,12 +90,12 @@ class Payment(CreatedUpdatedModel):
         days_in_current_month = self.date.day
         days_in_current_year = days_in_year(self.date.year)
 
-        def _get_dividend(for_prev=False):
+        def _get_dividend(for_prev: bool = False) -> Decimal:
             if not for_prev:
                 return debt_rest * self.mortgage.percent * days_in_prev_month
             return debt_rest * self.mortgage.percent * days_in_current_month
 
-        def _get_divisor(for_prev=False):
+        def _get_divisor(for_prev: bool = False) -> int:
             if not for_prev:
                 return days_in_current_year * 100
             return days_in_prev_year * 100
@@ -105,10 +103,10 @@ class Payment(CreatedUpdatedModel):
         bank_percent = _get_dividend(for_prev=True) / _get_divisor(for_prev=True) + _get_dividend() / _get_divisor()
         return round(bank_percent, 2)
 
-    def calc_debt_decrease(self):
+    def calc_debt_decrease(self) -> Decimal:
         return self.amount - self.bank_amount
 
-    def calc_debt_rest(self):
+    def calc_debt_rest(self) -> Decimal:
         prev_payment = self.get_prev_payment()
         if prev_payment:
             prev_amount = prev_payment.debt_rest
