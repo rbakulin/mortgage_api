@@ -51,7 +51,7 @@ docker-compose up
 ```
 6. Check calculated payments: <br><b>GET</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/payment/?page_size=100&page=1`<br><em>headers: {Authorization: Bearer <your_token_value>}</em>
 ## API structure
-All endpoints description: `127.0.0.1:8000/swagger/`
+Use Swagger to see all enpoint's description: `127.0.0.1:8000/swagger/`
 ## ⚠️ Usage
 1. All `mortgage/` endpoints are available only for registered users.
 2. User can only see mortgages that were created by himself.
