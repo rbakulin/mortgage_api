@@ -1,6 +1,8 @@
 from decimal import Decimal
 from math import pow
 
+from django.db import transaction
+
 from mortgage.helpers import get_months_difference, get_timedelta
 from mortgage.models import Payment
 
@@ -10,6 +12,7 @@ class PaymentScheduler:
         self.mortgage = mortgage
         self.extra_payment = extra_payment
 
+    @transaction.atomic()
     def calc_and_save_payments_schedule(self, start_payment_number=1, amount=None):
         # 1 - hardcode in math formula
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
@@ -55,6 +58,7 @@ class PaymentScheduler:
         else:
             return self.more_than_bank_percent_saving
 
+    @transaction.atomic(durable=True)
     def same_date_saving(self):
         extra_payment = self.extra_payment
         extra_payment.bank_amount = 0  # whole extra payment goes for debt decrease
@@ -74,6 +78,7 @@ class PaymentScheduler:
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
         self.calc_and_save_payments_schedule(start_payment_number, amount)
 
+    @transaction.atomic(durable=True)
     def less_than_bank_percent_saving(self):
         extra_payment = self.extra_payment
         extra_payment.bank_amount = self.extra_payment.amount
@@ -88,6 +93,7 @@ class PaymentScheduler:
         next_payment.debt_rest = next_payment.calc_debt_rest()
         next_payment.save()
 
+    @transaction.atomic(durable=True)
     def more_than_bank_percent_saving(self):
         extra_payment = self.extra_payment
         extra_payment.bank_amount = extra_payment.calc_bank_amount()
