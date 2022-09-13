@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
@@ -17,13 +19,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ('username', 'password', 'password2', 'email', 'first_name', 'last_name')
 
-    def validate(self, attrs):
+    def validate(self, attrs: Dict) -> Dict:
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
 
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: Dict) -> User:
         del validated_data['password2']
         user = User.objects.create(**validated_data)
 
