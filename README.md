@@ -65,7 +65,7 @@ Use Swagger to see all endpoints description: `127.0.0.1:8000/swagger/`
    - Extra payment's amount should be less than previous payment's debt rest.
 * Access token expires in 1 hour, refresh token - in 24 hours. Use `token/refresh/` to refresh the token.
 ## Pre-commit hooks
-* Make sure you did install requirements (`pip install -r requirements.txt`), and then just set up the git hook scripts via `pre-commit`:
+Make sure you did install requirements (`pip install -r requirements.txt`), and then just set up the git hook scripts via `pre-commit`:
 ```shell
 pre-commit install
 ```
