@@ -6,12 +6,15 @@ MORTGAGE-API 🏠
 
 ---
 ## Run
-1. Run migrations:
+You can run the app natively:
+```shell
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+Or via docker-compose:
 ```shell
 docker-compose run app python manage.py migrate
-```
-2. Run the app and the database:
-```shell
 docker-compose up
 ```
 ## Quickstart
@@ -53,11 +56,16 @@ docker-compose up
 ## API structure
 Use Swagger to see all endpoints description: `127.0.0.1:8000/swagger/`
 ## ⚠️ Usage
-1. All `mortgage/` endpoints are available only for registered users.
-2. User can only see mortgages that were created by himself.
-3. After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
-4. You can't CRUD payments directly via API - use `calc-payment-schedule/` endpoint instead.
-5. There are a few rules for adding extra payments `add-extra-payment/`:
+* All `mortgage/` endpoints are available only for registered users.
+* User can only see mortgages that were created by himself.
+* After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
+* You can't CRUD payments directly via API - use `calc-payment-schedule/` endpoint instead.
+* There are a few rules for adding extra payments `add-extra-payment/`:
    - Extra payment's date should be bigger than first payment's date and lower than last payment's date.
    - Extra payment's amount should be less than previous payment's debt rest.
-6. Access token expires in 1 hour, refresh token - in 24 hours. Use `token/refresh/` to refresh the token.
+* Access token expires in 1 hour, refresh token - in 24 hours. Use `token/refresh/` to refresh the token.
+## Pre-commit hooks
+* Make sure you did install requirements (`pip install -r requirements.txt`), and then just set up the git hook scripts via `pre-commit`:
+```shell
+pre-commit install
+```
