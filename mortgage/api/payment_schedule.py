@@ -33,7 +33,6 @@ class PaymentScheduler:
         # add last payment manually
         last_payment = Payment(
             mortgage=self.mortgage,
-            amount=0,
             date=self.mortgage.last_payment_date,
         )
         last_payment.amount = last_payment.get_prev_payment().debt_rest
@@ -49,7 +48,7 @@ class ExtraPaymentCalculator:
         self.extra_payment = extra_payment
 
     def save_extra_payment(self) -> None:
-        saving_method = ExtraPaymentCalculator.get_saving_method(self)
+        saving_method = self.get_saving_method()
         return saving_method()
 
     def get_saving_method(self) -> Callable:

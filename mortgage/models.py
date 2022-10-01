@@ -47,11 +47,7 @@ class Mortgage(CreatedUpdatedModel):
 
     @staticmethod
     def get_mortgage(mortgage_id: int) -> Optional[Mortgage]:
-        try:
-            current_mortgage = Mortgage.objects.get(pk=mortgage_id)
-        except Mortgage.DoesNotExist:
-            return None
-        return current_mortgage
+        return Mortgage.objects.filter(pk=mortgage_id).first()
 
     class Meta:
         db_table = 'mortgage'
@@ -90,17 +86,14 @@ class Payment(CreatedUpdatedModel):
         days_in_current_month = self.date.day
         days_in_current_year = days_in_year(self.date.year)
 
-        def _get_dividend(for_prev: bool = False) -> Decimal:
-            if not for_prev:
-                return debt_rest * self.mortgage.percent * days_in_prev_month
-            return debt_rest * self.mortgage.percent * days_in_current_month
+        def _get_dividend(days_count: int) -> Decimal:
+            return debt_rest * self.mortgage.percent * days_count
 
-        def _get_divisor(for_prev: bool = False) -> int:
-            if not for_prev:
-                return days_in_current_year * 100
-            return days_in_prev_year * 100
+        def _get_divisor(days_count: int) -> int:
+            return days_count * 100
 
-        bank_percent = _get_dividend(for_prev=True) / _get_divisor(for_prev=True) + _get_dividend() / _get_divisor()
+        bank_percent = _get_dividend(days_in_prev_month) / _get_divisor(days_in_prev_year) + _get_dividend(
+            days_in_current_month) / _get_divisor(days_in_current_year)
         return round(bank_percent, 2)
 
     def calc_debt_decrease(self) -> Decimal:

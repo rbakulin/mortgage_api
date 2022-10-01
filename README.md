@@ -2,6 +2,7 @@
 MORTGAGE-API 🏠
 </h1>
 <p align="center">
+   TODO: TYPO
  <em>REST API for calculating mortgage parametrs: payment schedule, bank percent, extra payments etc.</em></p>
 
 ---
