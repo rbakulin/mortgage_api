@@ -13,11 +13,9 @@ class MortgageSerializer(serializers.ModelSerializer):
 
 
 class PaymentSerializer(serializers.ModelSerializer):
-    mortgage_id = serializers.PrimaryKeyRelatedField(many=False, queryset=Mortgage.objects.all())
-
     class Meta:
         model = Payment
-        fields = ('id', 'date', 'amount', 'bank_amount', 'debt_decrease', 'debt_rest', 'mortgage_id')
+        fields = ('date', 'amount', 'bank_amount', 'debt_decrease', 'debt_rest', 'is_extra')
 
 
 class BasicPaymentSerializer(serializers.ModelSerializer):
