@@ -42,7 +42,7 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Mortgage.objects.all()
     permission_classes = [IsOwner, IsAuthenticated]
 
-    def update(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def patch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
         if not current_mortgage:
             return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
@@ -50,14 +50,38 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
         if current_mortgage.user != request.user:
             return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
-        response = super().update(request, partial=True, *args, **kwargs)
-        current_mortgage_upd = Mortgage.objects.get(kwargs['pk'])
+        response = super().patch(request, *args, **kwargs)
+        current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
 
-        # should update payment schedule after updating mortgage itself
-        current_payments = Payment.objects.filter(mortgage_id=current_mortgage_upd.pk)
-        current_payments.delete()  # delete old payment schedule if it exists
-        payment_scheduler = PaymentScheduler(mortgage=current_mortgage_upd)
-        payment_scheduler.calc_and_save_payments_schedule()
+        # TODO: redundant condition, type hints fix
+        if current_mortgage_upd:
+            # should update payment schedule after updating mortgage itself
+            current_payments = Payment.objects.filter(mortgage_id=current_mortgage_upd.pk)
+            current_payments.delete()  # delete old payment schedule if it exists
+            payment_scheduler = PaymentScheduler(mortgage=current_mortgage_upd)
+            payment_scheduler.calc_and_save_payments_schedule()
+
+        return response
+
+    # TODO: DRY
+    def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
+        if not current_mortgage:
+            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+                            status=status.HTTP_404_NOT_FOUND)
+        if current_mortgage.user != request.user:
+            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+                            status=status.HTTP_403_FORBIDDEN)
+        response = super().put(request, *args, **kwargs)
+        current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
+
+        # TODO: redundant condition, type hints fix
+        if current_mortgage_upd:
+            # should update payment schedule after updating mortgage itself
+            current_payments = Payment.objects.filter(mortgage_id=current_mortgage_upd.pk)
+            current_payments.delete()  # delete old payment schedule if it exists
+            payment_scheduler = PaymentScheduler(mortgage=current_mortgage_upd)
+            payment_scheduler.calc_and_save_payments_schedule()
 
         return response
 
