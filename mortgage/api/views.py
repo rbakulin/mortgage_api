@@ -99,7 +99,7 @@ class ListPaymentAPIView(ListAPIView):
     def get_queryset(self) -> QuerySet:
         queryset = Payment.objects.filter(mortgage_id=self.kwargs['mortgage_id']).order_by('date', 'created_at')
         is_extra = self.request.query_params.get('is_extra')
-        if is_extra.lower() in ('1', 'true'):
+        if is_extra and is_extra.lower() in ('1', 'true'):
             queryset = Payment.objects.filter(
                 mortgage_id=self.kwargs['mortgage_id'], is_extra=True).order_by('date', 'created_at')
         return queryset
