@@ -78,6 +78,7 @@ class ExtraPaymentCalculator:
         next_payment.debt_rest = next_payment.calc_debt_rest() - next_payment.debt_decrease
         next_payment.save()
 
+        # delete old payment schedule if it exists
         Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
@@ -114,6 +115,7 @@ class ExtraPaymentCalculator:
         next_payment.debt_rest = next_payment.calc_debt_rest()
         next_payment.save()
 
+        # delete old payment schedule if it exists
         Payment.objects.filter(mortgage_id=self.mortgage.pk, date__gt=next_payment.date).delete()
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)

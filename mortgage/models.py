@@ -76,14 +76,11 @@ class Payment(CreatedUpdatedModel):
     def calc_bank_amount(self) -> Decimal:
         prev_payment = self.get_prev_payment()
         if prev_payment:
-            days_in_prev_month = get_last_day_in_months(prev_payment.date) - prev_payment.date.day
-            days_in_prev_year = days_in_year(prev_payment.date.year)
+            prev_payment_date = prev_payment.date
             debt_rest = prev_payment.debt_rest
         else:
-            days_in_prev_month = get_last_day_in_months(self.mortgage.issue_date) - self.mortgage.issue_date.day
-            days_in_prev_year = days_in_year(self.mortgage.issue_date.year)
+            prev_payment_date = self.mortgage.issue_date
             debt_rest = self.mortgage.total_amount
-        days_in_current_month = self.date.day
         days_in_current_year = days_in_year(self.date.year)
 
         def _get_dividend(days_count: int) -> Decimal:
@@ -92,6 +89,14 @@ class Payment(CreatedUpdatedModel):
         def _get_divisor(days_count: int) -> int:
             return days_count * 100
 
+        if self.date.year == prev_payment_date.year:
+            date_delta = self.date - prev_payment_date
+            bank_percent = _get_dividend(date_delta.days) / _get_divisor(days_in_current_year)
+            return round(bank_percent, 2)
+
+        days_in_prev_month = get_last_day_in_months(prev_payment_date) - prev_payment_date.day
+        days_in_prev_year = days_in_year(prev_payment_date.year)
+        days_in_current_month = self.date.day
         bank_percent = _get_dividend(days_in_prev_month) / _get_divisor(days_in_prev_year) + _get_dividend(
             days_in_current_month) / _get_divisor(days_in_current_year)
         return round(bank_percent, 2)
