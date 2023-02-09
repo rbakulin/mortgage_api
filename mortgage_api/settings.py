@@ -3,6 +3,8 @@ from datetime import timedelta
 
 import environ
 
+from .log_formatters import CustomJsonFormatter
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -38,6 +40,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'corsheaders',
 
+    'api',
     'mortgage',
     'authentication',
 ]
@@ -52,6 +55,44 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
+
+if os.getenv('ENV') == 'prod':
+    filepath = '/var/log/mortgage_api.log'
+else:
+    filepath = os.path.join(BASE_DIR, 'mortgage_api.log')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json_formatter': {
+            '()': CustomJsonFormatter,
+        },
+        'verbose': {
+            'format': '{asctime} {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'json_formatter',
+            'filename': filepath,
+            'backupCount': 30,  # keep at most 30 log files
+            'maxBytes': 5 * 1024 * 1024,  # 5MB
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+    },
+}
 
 ROOT_URLCONF = 'mortgage_api.urls'
 
