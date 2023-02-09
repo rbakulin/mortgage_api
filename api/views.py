@@ -13,11 +13,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
-from mortgage import response_messages
+from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
+from mortgage.payment_schedule import ExtraPaymentCalculator, PaymentScheduler
 
 from .pagination import CustomPagination
-from .payment_schedule import ExtraPaymentCalculator, PaymentScheduler
 from .permissions import IsOwner
 from .serializers import (BasicPaymentSerializer, MortgageSerializer,
                           PaymentSerializer)
@@ -45,10 +45,10 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     def patch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
         if not current_mortgage:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
         response = super().patch(request, *args, **kwargs)
         current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
@@ -67,10 +67,10 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
         if not current_mortgage:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
         response = super().put(request, *args, **kwargs)
         current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
@@ -109,10 +109,10 @@ class ListPaymentAPIView(ListAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
 
         response = super().get(request, *args, **kwargs)
@@ -129,10 +129,10 @@ class CalcPaymentsSchedule(CreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
 
         current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
@@ -140,7 +140,7 @@ class CalcPaymentsSchedule(CreateAPIView):
 
         payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
         payment_scheduler.calc_and_save_payments_schedule()
-        return Response(data={'detail': response_messages.CALCULATED_SUCCESSFULLY},
+        return Response(data={'detail': responses.CALCULATED_SUCCESSFULLY},
                         status=status.HTTP_200_OK)
 
 
@@ -154,10 +154,10 @@ class AddExtraPayment(CreateAPIView):
         mortgage_id = kwargs['mortgage_id']
         current_mortgage = Mortgage.get_mortgage(mortgage_id)
         if not current_mortgage:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_FOUND},
+            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                             status=status.HTTP_404_NOT_FOUND)
         if current_mortgage.user != request.user:
-            return Response(data={'detail': response_messages.MORTGAGE_NOT_BELONG},
+            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
                             status=status.HTTP_403_FORBIDDEN)
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
@@ -173,16 +173,16 @@ class AddExtraPayment(CreateAPIView):
             is_extra=True
         )
         if not current_mortgage.first_payment_date < extra_payment.date < current_mortgage.last_payment_date:
-            return Response(data={'detail': response_messages.PAYMENT_DATE_INCORRECT},
+            return Response(data={'detail': responses.PAYMENT_DATE_INCORRECT},
                             status=status.HTTP_400_BAD_REQUEST)
 
         prev_extra_payment = extra_payment.get_prev_payment()
         if extra_payment.amount > prev_extra_payment.debt_rest:
-            return Response(data={'detail': response_messages.PAYMENT_AMOUNT_INCORRECT},
+            return Response(data={'detail': responses.PAYMENT_AMOUNT_INCORRECT},
                             status=status.HTTP_400_BAD_REQUEST)
 
         extra_payment_calculator = ExtraPaymentCalculator(mortgage=current_mortgage, extra_payment=extra_payment)
         extra_payment_calculator.save_extra_payment()
 
-        return Response(data={'detail': response_messages.PAYMENT_ADDED_SUCCESSFULLY},
+        return Response(data={'detail': responses.PAYMENT_ADDED_SUCCESSFULLY},
                         status=status.HTTP_200_OK)

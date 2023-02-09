@@ -1,9 +1,14 @@
+import logging
 from typing import Dict
 
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
+
+from mortgage.messages import events
+
+logger = logging.getLogger('django')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -21,6 +26,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs: Dict) -> Dict:
         if attrs['password'] != attrs['password2']:
+            logger.warning(events.PASS_NOT_MATCH.format(username=attrs['username']))
             raise serializers.ValidationError({"password": "Password fields didn't match."})
 
         return attrs
@@ -31,5 +37,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         user.set_password(validated_data['password'])
         user.save()
+        logger.info(events.USER_CREATED.format(user_id=user.pk))
 
         return user
