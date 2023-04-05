@@ -64,8 +64,12 @@ Use Swagger to see all endpoints description: [127.0.0.1:8000/swagger/](http://1
    - Extra payment's date should be bigger than first payment's date and lower than last payment's date.
    - Extra payment's amount should be less than previous payment's debt rest.
 * Access token expires in 1 hour, refresh token - in 24 hours. Use `token/refresh/` to refresh the token.
+## Logging
+The app writes logs to a console and to a file named `mortgage_api.log` in (if it's not `prod` env) the app's base directory.
+This file contains events in json representation which is easy to be parsed.
+You can go to the `settings.py` and remove `file` handler in `LOGGING` section if it feels redundant.
 ## Pre-commit hooks
-Make sure you did install requirements (`pip install -r requirements.txt`), and then just set up the git hook scripts via `pre-commit`:
+Make sure you did install requirements (`pip install -r requirements.txt`) and then just set up the git hook scripts via `pre-commit`:
 ```shell
 pre-commit install
 ```
