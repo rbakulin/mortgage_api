@@ -8,7 +8,8 @@ MORTGAGE-API 🏠
 ## Run
 You can run the app natively:
 ```shell
-pip install -r requirements.txt
+pip install poetry
+poetry install
 python manage.py migrate
 python manage.py runserver
 ```
