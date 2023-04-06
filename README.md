@@ -2,9 +2,18 @@
 MORTGAGE-API 🏠
 </h1>
 <p align="center">
- <em>REST API for calculating mortgage parameters: payment schedule, bank percent, extra payments etc.</em></p>
+ <em>REST API that allows to calculate mortgage details, such as payment schedule and principal/interest breakdown. 
+Supports addition of extra payments - they will be dynamically incorporated into the payment schedule.</em></p>
 
 ---
+## Basic info
+An annuity repayment scheme is used for calculations. 
+The formula for calculating a monthly payment: 
+```
+PAYMENT = LOAN AMOUNT * (INTEREST RATE / (1 + INTEREST RATE) - NUMBER OF MONTHS - 1)
+```
+The final payment may be less than the standard monthly payment, so the amount of the final payment is equal to the 
+remaining balance after the previous payment was made.
 ## Run
 You can run the app natively:
 ```shell
@@ -69,6 +78,7 @@ Use Swagger to see all endpoints description: [127.0.0.1:8000/swagger/](http://1
 The app writes logs to a console and to a file named `mortgage_api.log` in (if it's not `prod` env) the app's base directory.
 This file contains events in json representation which is easy to be parsed.
 You can go to the `settings.py` and remove `file` handler in `LOGGING` section if it feels redundant.
+Besides default Django events all payment calculations are logged. 
 ## Pre-commit hooks
 Make sure you did install requirements (`pip install -r requirements.txt`) and then just set up the git hook scripts via `pre-commit`:
 ```shell
