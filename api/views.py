@@ -17,6 +17,7 @@ from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 from mortgage.payment_schedule import ExtraPaymentCalculator, PaymentScheduler
 
+from .helpers import check_mortgage_permissions
 from .pagination import PaymentPagination
 from .permissions import IsOwner
 from .serializers import (BasicPaymentSerializer, MortgageSerializer,
@@ -42,13 +43,9 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner, IsAuthenticated]
 
     def patch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
-        if not current_mortgage:
-            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
-                            status=status.HTTP_404_NOT_FOUND)
-        if current_mortgage.user != request.user:
-            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
-                            status=status.HTTP_403_FORBIDDEN)
+        response = check_mortgage_permissions(mortgage_id=kwargs['pk'], user_id=request.user.pk)
+        if response.status_code != 200:
+            return response
         response = super().patch(request, *args, **kwargs)
         current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
 
@@ -62,15 +59,10 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
 
         return response
 
-    # TODO: DRY
     def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
-        if not current_mortgage:
-            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
-                            status=status.HTTP_404_NOT_FOUND)
-        if current_mortgage.user != request.user:
-            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
-                            status=status.HTTP_403_FORBIDDEN)
+        response = check_mortgage_permissions(mortgage_id=kwargs['pk'], user_id=request.user.pk)
+        if response.status_code != 200:
+            return response
         response = super().put(request, *args, **kwargs)
         current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
 
