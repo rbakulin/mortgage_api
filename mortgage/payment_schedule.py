@@ -34,6 +34,9 @@ class PaymentScheduler:
             payment.debt_decrease = payment.calc_debt_decrease()
             payment.debt_rest = payment.calc_debt_rest()
             payment.save()
+            # to avoid adding unneeded payments when bank percent is high
+            if payment.debt_rest < amount:
+                break
 
         logger.info(events.PAYMENTS_ADDED.format(payments_num=self.mortgage.period_in_months - start_payment_number,
                                                  mortgage_id=self.mortgage.pk, amount=amount))
