@@ -17,7 +17,7 @@ from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 from mortgage.payment_schedule import ExtraPaymentCalculator, PaymentScheduler
 
-from .pagination import CustomPagination
+from .pagination import PaymentPagination
 from .permissions import IsOwner
 from .serializers import (BasicPaymentSerializer, MortgageSerializer,
                           PaymentSerializer)
@@ -28,7 +28,6 @@ class ListCreateMortgageAPIView(ListCreateAPIView):
     serializer_class = MortgageSerializer
     queryset = Mortgage.objects.all()
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
 
     def perform_create(self, serializer: Serializer) -> None:
         serializer.save(user=self.request.user)
@@ -91,7 +90,7 @@ class ListPaymentAPIView(ListAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
+    pagination_class = PaymentPagination
     is_extra = openapi.Parameter('is_extra', openapi.IN_QUERY,
                                  description="Get only extra payments",
                                  type=openapi.TYPE_BOOLEAN)
@@ -123,7 +122,6 @@ class CalcPaymentsSchedule(CreateAPIView):
     serializer_class = PaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         mortgage_id = kwargs['mortgage_id']
@@ -148,7 +146,6 @@ class AddExtraPayment(CreateAPIView):
     serializer_class = BasicPaymentSerializer
     queryset = Payment.objects.all()
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         mortgage_id = kwargs['mortgage_id']
