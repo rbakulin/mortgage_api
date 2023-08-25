@@ -17,7 +17,7 @@ from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 from mortgage.payment_schedule import ExtraPaymentCalculator, PaymentScheduler
 
-from .helpers import check_mortgage_permissions
+from .helpers import check_mortgage_permissions, update_payment_schedule
 from .pagination import PaymentPagination
 from .permissions import IsOwner
 from .serializers import (BasicPaymentSerializer, MortgageSerializer,
@@ -43,36 +43,22 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwner, IsAuthenticated]
 
     def patch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        response = check_mortgage_permissions(mortgage_id=kwargs['pk'], user_id=request.user.pk)
-        if response.status_code != 200:
-            return response
-        response = super().patch(request, *args, **kwargs)
-        current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
-
-        # TODO: redundant condition, type hints fix
-        if current_mortgage_upd:
-            # should update payment schedule after updating mortgage itself
-            current_payments = Payment.objects.filter(mortgage_id=current_mortgage_upd.pk)
-            current_payments.delete()  # delete old payment schedule if it exists
-            payment_scheduler = PaymentScheduler(mortgage=current_mortgage_upd)
-            payment_scheduler.calc_and_save_payments_schedule()
+        response = check_mortgage_permissions(
+            mortgage_id=kwargs['pk'], user_id=request.user.pk, http_method=super().patch, request=request,
+            *args, **kwargs
+        )
+        # should update payment schedule after updating mortgage itself
+        update_payment_schedule(kwargs['pk'])
 
         return response
 
     def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        response = check_mortgage_permissions(mortgage_id=kwargs['pk'], user_id=request.user.pk)
-        if response.status_code != 200:
-            return response
-        response = super().put(request, *args, **kwargs)
-        current_mortgage_upd = Mortgage.get_mortgage(kwargs['pk'])
-
-        # TODO: redundant condition, type hints fix
-        if current_mortgage_upd:
-            # should update payment schedule after updating mortgage itself
-            current_payments = Payment.objects.filter(mortgage_id=current_mortgage_upd.pk)
-            current_payments.delete()  # delete old payment schedule if it exists
-            payment_scheduler = PaymentScheduler(mortgage=current_mortgage_upd)
-            payment_scheduler.calc_and_save_payments_schedule()
+        response = check_mortgage_permissions(
+            mortgage_id=kwargs['pk'], user_id=request.user.pk, http_method=super().put, request=request,
+            *args, **kwargs
+        )
+        # should update payment schedule after updating mortgage itself
+        update_payment_schedule(kwargs['pk'])
 
         return response
 
