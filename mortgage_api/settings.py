@@ -58,8 +58,10 @@ MIDDLEWARE = [
 
 if os.getenv('ENV') == 'prod':
     filepath = '/var/log/mortgage_api.log'
+    backup_count = 30  # keep at most 30 log files on prod
 else:
     filepath = os.path.join(BASE_DIR, 'mortgage_api.log')
+    backup_count = 1
 
 LOGGING = {
     'version': 1,
@@ -78,7 +80,7 @@ LOGGING = {
             'class': 'logging.handlers.RotatingFileHandler',
             'formatter': 'json_formatter',
             'filename': filepath,
-            'backupCount': 30,  # keep at most 30 log files
+            'backupCount': backup_count,
             'maxBytes': 5 * 1024 * 1024,  # 5MB
         },
         'console': {
