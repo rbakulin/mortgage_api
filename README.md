@@ -80,7 +80,7 @@ This file contains events in json representation which is easy to be parsed.
 You can go to the `settings.py` and remove `file` handler in `LOGGING` section if it feels redundant.
 Besides default Django events all payment calculations are logged. 
 ## Pre-commit hooks
-Make sure you did install requirements (`pip install -r requirements.txt`) and then just set up the git hook scripts via `pre-commit`:
+Make sure you did install requirements (`poetry install`) and then just set up the git hook scripts via `pre-commit`:
 ```shell
 pre-commit install
 ```
