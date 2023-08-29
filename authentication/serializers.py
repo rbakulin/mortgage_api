@@ -40,3 +40,19 @@ class RegisterSerializer(serializers.ModelSerializer):
         logger.info(events.USER_CREATED.format(user_id=user.pk))
 
         return user
+
+
+class TokenRefreshSuccessSerializer(serializers.Serializer):
+    access = serializers.CharField()
+
+
+class TokenObtainPairSuccessSerializer(TokenRefreshSuccessSerializer):
+    refresh = serializers.CharField()
+    access = serializers.CharField()
+
+
+class UserCreateSuccessSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
