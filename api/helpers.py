@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 from django.http import HttpRequest, HttpResponse
 from rest_framework import status
@@ -10,7 +10,8 @@ from mortgage.payment_schedule import PaymentScheduler
 
 
 def check_mortgage_permissions(
-        mortgage_id: int, user_id: int, http_method: Callable, request: HttpRequest, *args, **kwargs) -> HttpResponse:
+        mortgage_id: int, user_id: int, http_method: Callable, request: HttpRequest, *args: Any, **kwargs: Any
+) -> HttpResponse:
     current_mortgage = Mortgage.get_mortgage(mortgage_id)
     if not current_mortgage:
         return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
@@ -23,8 +24,11 @@ def check_mortgage_permissions(
 
 def update_payment_schedule(mortgage_id: int) -> None:
     current_mortgage = Mortgage.get_mortgage(mortgage_id)
+    if not current_mortgage:
+        return
     current_payments = Payment.objects.filter(mortgage_id=current_mortgage.pk)
-    if current_payments:
-        current_payments.delete()  # delete old payment schedule if it exists
-        payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
-        payment_scheduler.calc_and_save_payments_schedule()
+    if not current_payments:
+        return
+    current_payments.delete()  # delete old payment schedule if it exists
+    payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
+    payment_scheduler.calc_and_save_payments_schedule()
