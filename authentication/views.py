@@ -13,7 +13,7 @@ from .serializers import (RegisterSerializer, TokenObtainPairSuccessSerializer,
                           UserCreateSuccessSerializer)
 
 
-# For some reason yasg generates wrong incorrect doc for token endpoints, so we have to inherit original views
+# For some reason yasg generates incorrect doc for token endpoints, so we have to inherit original views
 # to use swagger_auto_schema decorator via witch we can redefine incorrect responses
 class TokenObtainPairViewSwaggerFixed(TokenObtainPairView):
     @swagger_auto_schema(responses={200: TokenObtainPairSuccessSerializer()})
