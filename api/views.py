@@ -15,7 +15,7 @@ from rest_framework.serializers import Serializer
 
 from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
-from mortgage.payment_schedule import ExtraPaymentCalculator, PaymentScheduler
+from mortgage.payment_schedule import ExtraPaymentCalculator
 
 from .helpers import check_mortgage_permissions, update_payment_schedule
 from .pagination import PaymentPagination
@@ -46,19 +46,20 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
         response = check_mortgage_permissions(
             *args, user_id=request.user.pk, http_method=super().patch, request=request, **kwargs
         )
+        if not status.is_success(response.status_code):
+            return response
         # should update payment schedule after updating mortgage itself
         update_payment_schedule(kwargs['pk'])
-
         return response
 
     def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         response = check_mortgage_permissions(
-            mortgage_id=kwargs['pk'], user_id=request.user.pk, http_method=super().put, request=request,
-            *args, **kwargs
+            *args, user_id=request.user.pk, http_method=super().put, request=request, **kwargs
         )
+        if not status.is_success(response.status_code):
+            return response
         # should update payment schedule after updating mortgage itself
         update_payment_schedule(kwargs['pk'])
-
         return response
 
 
@@ -82,16 +83,9 @@ class ListPaymentAPIView(ListAPIView):
 
     @swagger_auto_schema(manual_parameters=[is_extra])
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        mortgage_id = kwargs['mortgage_id']
-        current_mortgage = Mortgage.get_mortgage(mortgage_id)
-        if not current_mortgage:
-            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
-                            status=status.HTTP_404_NOT_FOUND)
-        if current_mortgage.user != request.user:
-            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        response = super().get(request, *args, **kwargs)
+        response = check_mortgage_permissions(
+            *args, user_id=request.user.pk, http_method=super().get, request=request, **kwargs
+        )
         return response
 
 
@@ -101,22 +95,14 @@ class CalcPaymentsSchedule(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        mortgage_id = kwargs['mortgage_id']
-        current_mortgage = Mortgage.get_mortgage(mortgage_id)
-        if not current_mortgage:
-            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
-                            status=status.HTTP_404_NOT_FOUND)
-        if current_mortgage.user != request.user:
-            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        current_payments = Payment.objects.filter(mortgage_id=current_mortgage.id)
-        current_payments.delete()  # delete old payment schedule if it exists
-
-        payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
-        payment_scheduler.calc_and_save_payments_schedule()
-        return Response(data={'detail': responses.CALCULATED_SUCCESSFULLY},
-                        status=status.HTTP_200_OK)
+        response = check_mortgage_permissions(
+            *args, user_id=request.user.pk, success_message=responses.CALCULATED_SUCCESSFULLY,
+            request=request, **kwargs
+        )
+        if not status.is_success(response.status_code):
+            return response
+        update_payment_schedule(kwargs['mortgage_id'])
+        return response
 
 
 class AddExtraPayment(CreateAPIView):
@@ -125,21 +111,19 @@ class AddExtraPayment(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        mortgage_id = kwargs['mortgage_id']
-        current_mortgage = Mortgage.get_mortgage(mortgage_id)
-        if not current_mortgage:
-            return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
-                            status=status.HTTP_404_NOT_FOUND)
-        if current_mortgage.user != request.user:
-            return Response(data={'detail': responses.MORTGAGE_NOT_BELONG},
-                            status=status.HTTP_403_FORBIDDEN)
+        response = check_mortgage_permissions(
+            *args, user_id=request.user.pk, success_message=responses.PAYMENT_ADDED_SUCCESSFULLY,
+            request=request, **kwargs
+        )
+        if not status.is_success(response.status_code):
+            return response
+        current_mortgage = Mortgage.get_mortgage(kwargs['mortgage_id'])
         serializer = self.serializer_class(data=request.data)
         if not serializer.is_valid():
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
-
         extra_payment = Payment(
             mortgage=current_mortgage,
             amount=request.data['amount'],
@@ -149,14 +133,10 @@ class AddExtraPayment(CreateAPIView):
         if not current_mortgage.first_payment_date < extra_payment.date < current_mortgage.last_payment_date:
             return Response(data={'detail': responses.PAYMENT_DATE_INCORRECT},
                             status=status.HTTP_400_BAD_REQUEST)
-
         prev_extra_payment = extra_payment.get_prev_payment()
         if extra_payment.amount > prev_extra_payment.debt_rest:
             return Response(data={'detail': responses.PAYMENT_AMOUNT_INCORRECT},
                             status=status.HTTP_400_BAD_REQUEST)
-
         extra_payment_calculator = ExtraPaymentCalculator(mortgage=current_mortgage, extra_payment=extra_payment)
         extra_payment_calculator.save_extra_payment()
-
-        return Response(data={'detail': responses.PAYMENT_ADDED_SUCCESSFULLY},
-                        status=status.HTTP_200_OK)
+        return response

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Optional
 
 from django.db import models
 
@@ -46,7 +45,7 @@ class Mortgage(CreatedUpdatedModel):
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     @staticmethod
-    def get_mortgage(mortgage_id: int) -> Optional[Mortgage]:
+    def get_mortgage(mortgage_id: int) -> Mortgage:
         return Mortgage.objects.filter(pk=mortgage_id).first()
 
     class Meta:
