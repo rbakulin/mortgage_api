@@ -44,8 +44,7 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
 
     def patch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         response = check_mortgage_permissions(
-            mortgage_id=kwargs['pk'], user_id=request.user.pk, http_method=super().patch, request=request,
-            *args, **kwargs
+            *args, user_id=request.user.pk, http_method=super().patch, request=request, **kwargs
         )
         # should update payment schedule after updating mortgage itself
         update_payment_schedule(kwargs['pk'])

@@ -10,9 +10,9 @@ from mortgage.payment_schedule import PaymentScheduler
 
 
 def check_mortgage_permissions(
-        mortgage_id: int, user_id: int, http_method: Callable, request: HttpRequest, *args: Any, **kwargs: Any
+        *args: Any, user_id: int, http_method: Callable, request: HttpRequest, **kwargs: Any
 ) -> HttpResponse:
-    current_mortgage = Mortgage.get_mortgage(mortgage_id)
+    current_mortgage = Mortgage.get_mortgage(kwargs['pk'])
     if not current_mortgage:
         return Response(data={'detail': responses.MORTGAGE_NOT_FOUND},
                         status=status.HTTP_404_NOT_FOUND)
