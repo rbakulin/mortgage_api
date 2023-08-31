@@ -13,7 +13,7 @@ logger = logging.getLogger('django')
 
 
 def check_mortgage_permissions(
-        *args: Any, user_id: int, http_method: Callable = None, success_message: str = None,
+        *args: Any, user_id: int, http_method: Callable = None, success_response: dict = None,
         request: HttpRequest, **kwargs: Any
 ) -> HttpResponse:
     mortgage_id = kwargs['mortgage_id'] if kwargs.get('mortgage_id') else kwargs['pk']
@@ -23,7 +23,9 @@ def check_mortgage_permissions(
     if current_mortgage.user.pk != user_id:
         return Response(data={'detail': responses.MORTGAGE_NOT_BELONG}, status=status.HTTP_403_FORBIDDEN)
     if not http_method:
-        return Response(data={'detail': success_message}, status=status.HTTP_200_OK)
+        if not success_response:  # dumb check to fix typing hints
+            raise Exception('One of http_method or success_response is required')
+        return Response(data=success_response['data'], status=success_response['code'])
     return http_method(request, *args, **kwargs)
 
 

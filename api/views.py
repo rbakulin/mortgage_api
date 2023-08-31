@@ -95,9 +95,9 @@ class CalcPaymentsSchedule(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        success_response = {'code': status.HTTP_200_OK, 'data': {'detail': responses.CALCULATED_SUCCESSFULLY}}
         response = check_mortgage_permissions(
-            *args, user_id=request.user.pk, success_message=responses.CALCULATED_SUCCESSFULLY,
-            request=request, **kwargs
+            *args, user_id=request.user.pk, success_response=success_response, request=request, **kwargs
         )
         if not status.is_success(response.status_code):
             return response
@@ -111,19 +111,18 @@ class AddExtraPayment(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        serializer = self.serializer_class(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         response = check_mortgage_permissions(
-            *args, user_id=request.user.pk, success_message=responses.PAYMENT_ADDED_SUCCESSFULLY,
+            *args, user_id=request.user.pk, success_response={'code': status.HTTP_201_CREATED, 'data': serializer.data},
             request=request, **kwargs
         )
         if not status.is_success(response.status_code):
             return response
+
         current_mortgage = Mortgage.get_mortgage(kwargs['mortgage_id'])
-        serializer = self.serializer_class(data=request.data)
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
         extra_payment = Payment(
             mortgage=current_mortgage,
             amount=request.data['amount'],
