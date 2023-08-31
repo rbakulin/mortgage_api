@@ -50,7 +50,7 @@ docker-compose up
     "percent": "8.20",
     "period": 25,
     "first_payment_amount": 2500000,
-    "total_amount": 11000000,
+    "credit_amount": 11000000,
     "issue_date": "2021-09-04"
 }
 ```

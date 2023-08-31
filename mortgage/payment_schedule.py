@@ -21,7 +21,7 @@ class PaymentScheduler:
         # 1 - hardcode in math formula
         power = Decimal(pow(self.mortgage.monthly_percent + 1, self.mortgage.period_in_months))
         coef = Decimal(power * self.mortgage.monthly_percent / (power - 1))
-        amount = round(coef * self.mortgage.total_amount, 2) if not amount else amount
+        amount = round(coef * self.mortgage.credit_amount, 2) if not amount else amount
         number_of_payments = range(start_payment_number, self.mortgage.period_in_months)
 
         for i in number_of_payments:

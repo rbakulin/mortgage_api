@@ -20,13 +20,13 @@ class Mortgage(CreatedUpdatedModel):
     percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="percent")
     period = models.IntegerField(verbose_name="period")
     first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount")
-    total_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
+    credit_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
     issue_date = models.DateField(verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
     @property
     def apartment_price(self) -> Decimal:
-        return self.first_payment_amount + self.total_amount
+        return self.first_payment_amount + self.credit_amount
 
     @property
     def period_in_months(self) -> int:
@@ -79,7 +79,7 @@ class Payment(CreatedUpdatedModel):
             debt_rest = prev_payment.debt_rest
         else:
             prev_payment_date = self.mortgage.issue_date
-            debt_rest = self.mortgage.total_amount
+            debt_rest = self.mortgage.credit_amount
         days_in_current_year = days_in_year(self.date.year)
 
         def _get_dividend(days_count: int) -> Decimal:
@@ -108,7 +108,7 @@ class Payment(CreatedUpdatedModel):
         if prev_payment:
             prev_amount = prev_payment.debt_rest
         else:
-            prev_amount = self.mortgage.total_amount
+            prev_amount = self.mortgage.credit_amount
         return prev_amount - self.debt_decrease
 
     class Meta:

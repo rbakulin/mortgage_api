@@ -8,7 +8,7 @@ class MortgageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mortgage
-        fields = ('id', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'total_amount', 'issue_date',
+        fields = ('id', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'credit_amount', 'issue_date',
                   'user_id')
 
 

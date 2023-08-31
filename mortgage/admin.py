@@ -12,7 +12,7 @@ class PaymentAdmin(admin.ModelAdmin):
 
 class MortgageAdmin(admin.ModelAdmin):
     list_filter = ['user']
-    list_display = ['pk', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'total_amount', 'issue_date',
+    list_display = ['pk', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'credit_amount', 'issue_date',
                     'user']
 
 
