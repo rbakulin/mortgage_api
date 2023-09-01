@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any
 
 from django.db.models import QuerySet
@@ -13,6 +12,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
+from mortgage.helpers import parse_date
 from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 from mortgage.payment_schedule import ExtraPaymentCalculator
@@ -48,8 +48,7 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
         )
         if not status.is_success(response.status_code):
             return response
-        # should update payment schedule after updating mortgage itself
-        update_payment_schedule(kwargs['pk'])
+        update_payment_schedule(kwargs['pk'])  # should update payment schedule after updating mortgage itself
         return response
 
     def put(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -58,8 +57,7 @@ class RetrieveUpdateDestroyMortgageAPIView(RetrieveUpdateDestroyAPIView):
         )
         if not status.is_success(response.status_code):
             return response
-        # should update payment schedule after updating mortgage itself
-        update_payment_schedule(kwargs['pk'])
+        update_payment_schedule(kwargs['pk'])  # should update payment schedule after updating mortgage itself
         return response
 
 
@@ -111,31 +109,25 @@ class AddExtraPayment(CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
-        serializer = self.serializer_class(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
         response = check_mortgage_permissions(
-            *args, user_id=request.user.pk, success_response={'code': status.HTTP_201_CREATED, 'data': serializer.data},
+            *args, user_id=request.user.pk, success_response={'code': status.HTTP_201_CREATED, 'data': request.data},
             request=request, **kwargs
         )
         if not status.is_success(response.status_code):
             return response
 
+        data_to_validate = request.data | {'is_extra': True, 'mortgage_id': kwargs['mortgage_id']}
+        serializer = self.serializer_class(data=data_to_validate)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         current_mortgage = Mortgage.get_mortgage(kwargs['mortgage_id'])
         extra_payment = Payment(
             mortgage=current_mortgage,
             amount=request.data['amount'],
-            date=datetime.strptime(request.data['date'], '%Y-%m-%d').date(),
+            date=parse_date(request.data['date']),
             is_extra=True
         )
-        if not current_mortgage.first_payment_date < extra_payment.date < current_mortgage.last_payment_date:
-            return Response(data={'detail': responses.PAYMENT_DATE_INCORRECT},
-                            status=status.HTTP_400_BAD_REQUEST)
-        prev_extra_payment = extra_payment.get_prev_payment()
-        if extra_payment.amount > prev_extra_payment.debt_rest:
-            return Response(data={'detail': responses.PAYMENT_AMOUNT_INCORRECT},
-                            status=status.HTTP_400_BAD_REQUEST)
         extra_payment_calculator = ExtraPaymentCalculator(mortgage=current_mortgage, extra_payment=extra_payment)
         extra_payment_calculator.save_extra_payment()
         return response

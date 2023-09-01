@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Dict
 
 from django.http import HttpRequest, HttpResponse
 from rest_framework import status
@@ -13,7 +13,7 @@ logger = logging.getLogger('django')
 
 
 def check_mortgage_permissions(
-        *args: Any, user_id: int, http_method: Callable = None, success_response: dict = None,
+        *args: Any, user_id: int, http_method: Callable = None, success_response: Dict = None,
         request: HttpRequest, **kwargs: Any
 ) -> HttpResponse:
     mortgage_id = kwargs['mortgage_id'] if kwargs.get('mortgage_id') else kwargs['pk']

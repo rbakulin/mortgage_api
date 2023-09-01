@@ -6,7 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from mortgage.messages import events
+from mortgage.messages import events, responses
 
 logger = logging.getLogger('django')
 
@@ -27,7 +27,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs: Dict) -> Dict:
         if attrs['password'] != attrs['password2']:
             logger.warning(events.PASS_NOT_MATCH.format(username=attrs['username']))
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
+            raise serializers.ValidationError({'password': responses.PASSWORDS_NOT_MATCH})
 
         return attrs
 

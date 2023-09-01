@@ -1,7 +1,9 @@
 import calendar
-from datetime import date
+from datetime import date, datetime
 
 from dateutil.relativedelta import relativedelta
+
+DATE_MASK = '%Y-%m-%d'
 
 
 def days_in_year(year: int) -> int:
@@ -20,3 +22,7 @@ def get_timedelta(months: int) -> relativedelta:
 def get_months_difference(date1: date, date2: date) -> int:
     time_diff = relativedelta(date1, date2)
     return time_diff.years * 12 + time_diff.months
+
+
+def parse_date(date_char: str) -> date:
+    return datetime.strptime(date_char, DATE_MASK).date()
