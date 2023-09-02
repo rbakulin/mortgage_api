@@ -65,11 +65,12 @@ docker-compose up
 6. Check calculated payments: <br><b>GET</b> `127.0.0.1:8000/api/v1/mortgage/<mortgage_id>/payment/?page_size=100&page=1`<br><em>headers: {Authorization: Bearer <your_token_value>}</em>
 ## API structure
 Use Swagger to see all endpoints description: [127.0.0.1:8000/swagger/](http://127.0.0.1:8000/swagger/)
-## ⚠️ Usage
+## ⚠️ Usage essentials
 * All `mortgage/` endpoints are available only for registered users.
 * User can only see mortgages that were created by himself.
-* After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
 * You can't CRUD payments directly via API - use `calc-payment-schedule/` endpoint instead.
+* Be aware that reusing the `calc-payment-schedule/` endpoint will remove any extra payment that you've already added.
+* After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
 * There are a few rules for adding extra payments `add-extra-payment/`:
    - Extra payment's date should be bigger than first payment's date and lower than last payment's date.
    - Extra payment's amount should be less than previous payment's debt rest.
