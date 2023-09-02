@@ -26,6 +26,14 @@ DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
 
+if os.getenv('ENV') == 'prod':
+    filepath = '/var/log/mortgage_api.log'
+    backup_count = 30  # keep at most 30 log files on prod
+    access_token_lifetime = timedelta(minutes=60)
+else:
+    filepath = os.path.join(BASE_DIR, 'mortgage_api.log')
+    backup_count = 1
+    access_token_lifetime = timedelta(days=1)
 
 # Application definition
 
@@ -55,13 +63,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
-
-if os.getenv('ENV') == 'prod':
-    filepath = '/var/log/mortgage_api.log'
-    backup_count = 30  # keep at most 30 log files on prod
-else:
-    filepath = os.path.join(BASE_DIR, 'mortgage_api.log')
-    backup_count = 1
 
 LOGGING = {
     'version': 1,
@@ -130,7 +131,7 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': access_token_lifetime,
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
