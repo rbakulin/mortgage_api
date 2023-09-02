@@ -30,11 +30,10 @@ def check_mortgage_permissions(
 
 
 def update_payment_schedule(mortgage_id: int) -> None:
-    current_mortgage = Mortgage.get_mortgage(mortgage_id)
-    current_payments = Payment.objects.filter(mortgage_id=current_mortgage.pk)
+    current_payments = Payment.objects.filter(mortgage_id=mortgage_id)
     if not current_payments:
         return
     current_payments.delete()  # delete old payment schedule if it exists
-    logger.info(events.SCHEDULE_DELETED.format(mortgage_id=current_mortgage.pk))
-    payment_scheduler = PaymentScheduler(mortgage=current_mortgage)
+    logger.info(events.SCHEDULE_DELETED.format(mortgage_id=mortgage_id))
+    payment_scheduler = PaymentScheduler(mortgage_id=mortgage_id)
     payment_scheduler.calc_and_save_payments_schedule()

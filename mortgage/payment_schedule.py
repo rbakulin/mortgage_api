@@ -1,11 +1,11 @@
 import logging
 from decimal import Decimal
 from math import pow
-from typing import Callable, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 from django.db import transaction
 
-from mortgage.helpers import get_months_difference, get_timedelta
+from mortgage.helpers import get_months_difference, get_timedelta, parse_date
 from mortgage.messages import events
 from mortgage.models import Mortgage, Payment
 
@@ -13,8 +13,9 @@ logger = logging.getLogger('django')
 
 
 class PaymentScheduler:
-    def __init__(self, mortgage: Mortgage) -> None:
-        self.mortgage = mortgage
+    def __init__(self, mortgage_id: int) -> None:
+        current_mortgage = Mortgage.get_mortgage(mortgage_id)
+        self.mortgage = current_mortgage
 
     @transaction.atomic()
     def calc_and_save_payments_schedule(self, start_payment_number: int = 1, amount: Optional[Decimal] = None) -> None:
@@ -56,8 +57,15 @@ class PaymentScheduler:
 
 
 class ExtraPaymentCalculator:
-    def __init__(self, mortgage: Mortgage, extra_payment: Payment) -> None:
-        self.mortgage = mortgage
+    def __init__(self, payment_params: Dict) -> None:
+        current_mortgage = Mortgage.get_mortgage(payment_params['mortgage_id'])
+        extra_payment = Payment(
+            mortgage=current_mortgage,
+            amount=payment_params['amount'],
+            date=parse_date(payment_params['date']),
+            is_extra=payment_params['is_extra']
+        )
+        self.mortgage = current_mortgage
         self.extra_payment = extra_payment
 
     def save_extra_payment(self) -> None:
@@ -109,7 +117,7 @@ class ExtraPaymentCalculator:
         logger.info(events.SCHEDULE_DELETED.format(mortgage_id=self.mortgage.pk))
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-        payment_scheduler = PaymentScheduler(mortgage=self.mortgage)
+        payment_scheduler = PaymentScheduler(mortgage_id=self.mortgage.pk)
         payment_scheduler.calc_and_save_payments_schedule(start_payment_number, amount)
 
     @transaction.atomic(durable=True)
@@ -155,7 +163,7 @@ class ExtraPaymentCalculator:
         logger.info(events.SCHEDULE_DELETED.format(mortgage_id=self.mortgage.pk))
 
         start_payment_number, amount = self.get_new_schedule_parameters(next_payment)
-        payment_scheduler = PaymentScheduler(mortgage=self.mortgage)
+        payment_scheduler = PaymentScheduler(mortgage_id=self.mortgage.pk)
         payment_scheduler.calc_and_save_payments_schedule(start_payment_number, amount)
 
     def get_new_schedule_parameters(self, next_payment: Payment) -> Tuple[int, Decimal]:

@@ -12,7 +12,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import Serializer
 
-from mortgage.helpers import parse_date
 from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 from mortgage.payment_schedule import ExtraPaymentCalculator
@@ -121,13 +120,6 @@ class AddExtraPayment(CreateAPIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        current_mortgage = Mortgage.get_mortgage(kwargs['mortgage_id'])
-        extra_payment = Payment(
-            mortgage=current_mortgage,
-            amount=request.data['amount'],
-            date=parse_date(request.data['date']),
-            is_extra=True
-        )
-        extra_payment_calculator = ExtraPaymentCalculator(mortgage=current_mortgage, extra_payment=extra_payment)
+        extra_payment_calculator = ExtraPaymentCalculator(payment_params=data_to_validate)
         extra_payment_calculator.save_extra_payment()
         return response
