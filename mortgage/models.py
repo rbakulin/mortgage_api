@@ -45,6 +45,11 @@ class Mortgage(CreatedUpdatedModel):
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     @staticmethod
+    def get_period_limits(limit_type: str) -> int:
+        limits = {'min': 1, 'max': 30}
+        return limits[limit_type]
+
+    @staticmethod
     def get_mortgage(mortgage_id: int) -> Mortgage:
         return Mortgage.objects.filter(pk=mortgage_id).first()
 

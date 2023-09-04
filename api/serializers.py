@@ -2,24 +2,20 @@ from typing import Dict
 
 from rest_framework import serializers
 
-from mortgage.helpers import CREDIT_PERIOD_INTERVAL, parse_date
+from mortgage.helpers import parse_date
 from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 
 
 class MortgageSerializer(serializers.ModelSerializer):
     user_id = serializers.ReadOnlyField(source='user.id')
+    period = serializers.IntegerField(
+        min_value=Mortgage.get_period_limits('min'), max_value=Mortgage.get_period_limits('max'))
 
     class Meta:
         model = Mortgage
         fields = ('id', 'percent', 'period', 'first_payment_amount', 'apartment_price', 'credit_amount', 'issue_date',
                   'user_id')
-
-    def validate(self, attrs: Dict) -> Dict:
-        super().validate(attrs)
-        if not CREDIT_PERIOD_INTERVAL['from'] <= attrs['period'] <= CREDIT_PERIOD_INTERVAL['to']:
-            raise serializers.ValidationError({'date': responses.MORTGAGE_PERIOD_INCORRECT})
-        return attrs
 
 
 class BasicPaymentSerializer(serializers.ModelSerializer):

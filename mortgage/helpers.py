@@ -4,7 +4,6 @@ from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 
 DATE_MASK = '%Y-%m-%d'
-CREDIT_PERIOD_INTERVAL = {'from': 1, 'to': 30}
 
 
 def days_in_year(year: int) -> int:
