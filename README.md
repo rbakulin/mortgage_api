@@ -71,6 +71,8 @@ Use Swagger to see all endpoints description: [127.0.0.1:8000/swagger/](http://1
 * You can't CRUD payments directly via API - use `calc-payment-schedule/` endpoint instead.
 * Be aware that reusing the `calc-payment-schedule/` endpoint will remove any extra payment that you've already added.
 * After updating a mortgage (PUT, PATCH), payment schedule will be recalculated automatically. Also, all extra payments for this mortgage will be removed.
+* There are a few rules for adding mortgage (POST) `mortgage/`:
+   - Mortgage's period should be between 1 and 30 years.
 * There are a few rules for adding extra payments `add-extra-payment/`:
    - Extra payment's date should be bigger than first payment's date and lower than last payment's date.
    - Extra payment's amount should be less than previous payment's debt rest.
