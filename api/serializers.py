@@ -2,15 +2,17 @@ from typing import Dict
 
 from rest_framework import serializers
 
-from mortgage.helpers import parse_date
+from mortgage.helpers import MORTGAGE_PERIOD_LIMITS, parse_date
 from mortgage.messages import responses
 from mortgage.models import Mortgage, Payment
 
 
 class MortgageSerializer(serializers.ModelSerializer):
     user_id = serializers.ReadOnlyField(source='user.id')
-    period = serializers.IntegerField(
-        min_value=Mortgage.get_period_limits('min'), max_value=Mortgage.get_period_limits('max'))
+    period = serializers.IntegerField(min_value=MORTGAGE_PERIOD_LIMITS['min'], max_value=MORTGAGE_PERIOD_LIMITS['max'])
+    percent = serializers.IntegerField(min_value=0, max_value=100)
+    credit_amount = serializers.IntegerField(min_value=1)
+    first_payment_amount = serializers.IntegerField(min_value=1)
 
     class Meta:
         model = Mortgage

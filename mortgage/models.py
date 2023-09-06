@@ -3,9 +3,11 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .helpers import days_in_year, get_last_day_in_months, get_timedelta
+from .helpers import (MORTGAGE_PERIOD_LIMITS, days_in_year,
+                      get_last_day_in_months, get_timedelta)
 
 
 class CreatedUpdatedModel(models.Model):
@@ -17,10 +19,16 @@ class CreatedUpdatedModel(models.Model):
 
 
 class Mortgage(CreatedUpdatedModel):
-    percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="percent")
-    period = models.IntegerField(verbose_name="period")
-    first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount")
-    credit_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount")
+    percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="bank percent",
+                                  validators=[MinValueValidator(0), MaxValueValidator(100)])
+    period = models.IntegerField(verbose_name="period", validators=[
+        MinValueValidator(MORTGAGE_PERIOD_LIMITS['min']),
+        MaxValueValidator(MORTGAGE_PERIOD_LIMITS['max']),
+    ])
+    first_payment_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="first payment amount",
+                                               validators=[MinValueValidator(1)])
+    credit_amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="total amount",
+                                        validators=[MinValueValidator(1)])
     issue_date = models.DateField(verbose_name="issue date")
     user = models.ForeignKey('auth.User', related_name='mortgages', on_delete=models.CASCADE, null=True)
 
@@ -45,11 +53,6 @@ class Mortgage(CreatedUpdatedModel):
         return Decimal(self.percent / (12 * 100))  # 1/12 of credit's percent in 0.xx format
 
     @staticmethod
-    def get_period_limits(limit_type: str) -> int:
-        limits = {'min': 1, 'max': 30}
-        return limits[limit_type]
-
-    @staticmethod
     def get_mortgage(mortgage_id: int) -> Mortgage:
         return Mortgage.objects.filter(pk=mortgage_id).first()
 
@@ -60,7 +63,8 @@ class Mortgage(CreatedUpdatedModel):
 
 class Payment(CreatedUpdatedModel):
     date = models.DateField(verbose_name="date")
-    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount")
+    amount = models.DecimalField(max_digits=11, decimal_places=2, verbose_name="amount",
+                                 validators=[MinValueValidator(1)])
     mortgage = models.ForeignKey('Mortgage', on_delete=models.CASCADE, related_name="payments",
                                  verbose_name='mortgage')
     is_extra = models.BooleanField(verbose_name='is extra payment', default=False)
