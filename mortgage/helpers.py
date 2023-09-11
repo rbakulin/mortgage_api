@@ -1,10 +1,12 @@
 import calendar
 from datetime import date, datetime
+from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 
 DATE_MASK = '%Y-%m-%d'
 MORTGAGE_PERIOD_LIMITS = {'min': 1, 'max': 30}
+MORTGAGE_BANK_PERCENT_MIN = Decimal('0.1')
 
 
 def days_in_year(year: int) -> int:

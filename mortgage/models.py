@@ -6,8 +6,8 @@ from decimal import Decimal
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .helpers import (MORTGAGE_PERIOD_LIMITS, days_in_year,
-                      get_last_day_in_months, get_timedelta)
+from .helpers import (MORTGAGE_BANK_PERCENT_MIN, MORTGAGE_PERIOD_LIMITS,
+                      days_in_year, get_last_day_in_months, get_timedelta)
 
 
 class CreatedUpdatedModel(models.Model):
@@ -20,7 +20,7 @@ class CreatedUpdatedModel(models.Model):
 
 class Mortgage(CreatedUpdatedModel):
     percent = models.DecimalField(max_digits=4, decimal_places=2, verbose_name="bank percent",
-                                  validators=[MinValueValidator(0), MaxValueValidator(100)])
+                                  validators=[MinValueValidator(MORTGAGE_BANK_PERCENT_MIN), MaxValueValidator(100)])
     period = models.IntegerField(verbose_name="period", validators=[
         MinValueValidator(MORTGAGE_PERIOD_LIMITS['min']),
         MaxValueValidator(MORTGAGE_PERIOD_LIMITS['max']),
