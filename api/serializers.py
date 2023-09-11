@@ -23,6 +23,8 @@ class MortgageSerializer(serializers.ModelSerializer):
 
 
 class BasicPaymentSerializer(serializers.ModelSerializer):
+    amount = serializers.DecimalField(max_digits=11, decimal_places=2, min_value=1)
+
     class Meta:
         model = Payment
         fields = ('date', 'amount')
